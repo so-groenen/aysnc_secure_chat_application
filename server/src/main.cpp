@@ -4,15 +4,16 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
- 
+#include "interface_chat_room.hpp"
+#include "interface_chat_participant.hpp"
+#include "interface_public_broadcaster.hpp"
+#include "hand_shaker.hpp"
+
 #include <cstdlib>
 #include <deque>
 #include <iostream>
 #include <list>
 #include <print>
-#include <memory>
-#include <set>
-#include <unordered_set>
 #include <string>
 #include <utility>
 #include <system_error>
@@ -31,118 +32,38 @@
 #include <asio/write.hpp>
 
 
+
 using namespace std::string_view_literals;
 using asio::ip::tcp;
 using asio::awaitable;
 using asio::co_spawn;
 using asio::redirect_error;
-
-//----------------------------------------------------------------------
-
-class IPublicBroadcaster
-{
-public:
-    virtual ~IPublicBroadcaster() {}
-    virtual void deliver(const std::string& msg) = 0;
-};
-typedef std::shared_ptr<IPublicBroadcaster> IBroadcaster_ptr;
-
-
-
-
-//----------------------------------------------------------------------
-class IControllableBroadcaster : public IPublicBroadcaster
-{
-public:
-    virtual ~IControllableBroadcaster() {}
-    virtual std::string_view ip() const = 0;
-    virtual awaitable<size_t> async_read_password(std::string& buff, size_t pass_buff_len, std::string_view delim) = 0;
-    // virtual awaitable<size_t> async_respond(std::string buff, size_t pass_buff_len, std::string_view delim) = 0;
-};
-
-namespace chat_participant
-{
-    class IChatParticipant : public IControllableBroadcaster
-    {
-    public:
-        virtual ~IChatParticipant() {}
-        virtual void start() = 0;
-        // virtual std::string_view ip() const = 0;
-    };
-    typedef std::unique_ptr<IChatParticipant> IChatParticipant_ptr;
-
-    struct ChatPartHash_
-    {
-        using is_transparent = void;
-
-        auto operator()(IChatParticipant* p) const { return std::hash<IChatParticipant*>{}(p); }
-        auto operator()(const IChatParticipant_ptr& p) const { return std::hash<IChatParticipant*>{}(p.get()); }
-    };
-
-    struct ChartPartEqual_
-    {
-        using is_transparent = void;
-        template <typename LHS, typename RHS>
-        auto operator()(const LHS& lhs, const RHS& rhs) const
-        {
-            return AsPtr(lhs) == AsPtr(rhs);
-        }
-    private:
-        static const IChatParticipant* AsPtr(const IChatParticipant* p) { return p; }
-        static const IChatParticipant* AsPtr(const IChatParticipant_ptr& p) { return p.get(); }
-    };
-
-    using unique_ptr_set = std::unordered_set<IChatParticipant_ptr, ChatPartHash_, ChartPartEqual_>;
-}
-
-using chat_participant::IChatParticipant;
-using chat_participant::IChatParticipant_ptr;
-
-class IPrivateBroadcaster
-{
-public:
-    virtual ~IPrivateBroadcaster() {}
-    virtual void deliver_private(const std::string& msg, IPublicBroadcaster* participant) = 0; //should be IPublicBroadcaster
-    virtual std::string_view password() const = 0;
-};
-
-
-class IChatRoom : public IPublicBroadcaster, public IPrivateBroadcaster
-{
-public:
-    virtual ~IChatRoom() {}
-    virtual void join(IChatParticipant_ptr participant) = 0;
-    virtual void join_public(IChatParticipant* participant) = 0;
-    // virtual void deliver_private(const std::string& msg, IChatParticipant* participant) = 0;
-    virtual void leave(IChatParticipant* participant) = 0;
-};
-
+ 
 class ChatRoom : public IChatRoom
 {
-    std::string m_password{"louvre"};
+    std::string m_password{};
     chat_participant::unique_ptr_set m_participants{};
     const size_t m_max_recent_msgs {100};
     std::deque<std::string> m_recent_msgs{};
+    std::string_view m_delim = "\r\n"sv;
 public:
+    explicit ChatRoom(std::string_view password = "LOUVRE") //https://edition.cnn.com/2025/11/06/europe/louvre-password-cctv-security-intl
+        : m_password{password}
+    {
+    } 
     std::string_view password() const override
     {
         return std::string_view(m_password);
     }
     void join(IChatParticipant_ptr participant) override
     {
-        std::println("new connection!");
+        std::println("New connection!");
 
         auto raw_participant = participant.get();       // a bit dangerous!
         m_participants.insert(std::move(participant));
-        
-        // for (auto msg: m_recent_msgs)
-        // {
-        //     raw_participant->deliver(msg); // populate "outbox"
-        // }
         raw_participant->start();
     }
-
-    void leave(IChatParticipant* participant) override // this will call participant->stop
+    void leave(IChatParticipant* participant) override 
     {
         auto it = m_participants.find(participant);
         if (it != m_participants.end())
@@ -157,12 +78,15 @@ public:
         {
             for (const auto& msg: m_recent_msgs)
             {   
-                auto msg_ = msg + "\n";
+                auto msg_ = msg;
+                for (const auto c : m_delim)
+                    msg_.push_back(c);
+                
                 participant->deliver(msg_); // populate "outbox"
             }
         }
     }
-    void deliver_private(const std::string& msg, IPublicBroadcaster* participant) override // this will call participant->stop
+    void deliver_private(const std::string& msg, IPublicBroadcaster* participant) override
     {
         auto chat_participant = dynamic_cast<IChatParticipant*>(participant); 
         auto it = m_participants.find(chat_participant);
@@ -185,288 +109,19 @@ public:
         }
     }
 };
-#include <asio/experimental/awaitable_operators.hpp>
 
-using namespace asio::experimental::awaitable_operators;
-
-class ChatSession;
-
-class HandShaker
-{
-    // asio::steady_timer* m_timeout_timer{};
-    // asio::any_io_executor& m_executor;
-    std::shared_ptr<IPrivateBroadcaster> m_private_room{};
-    IControllableBroadcaster* m_participant{}; 
-    size_t m_timeout_secs{5};
-    size_t m_write_response_await_ms{250};
-    bool m_should_accept{};
-    bool m_is_terminating{};
-public:
-    explicit HandShaker(std::shared_ptr<IPrivateBroadcaster> room, IControllableBroadcaster* participant)
-        : m_private_room{room}, m_participant{participant} 
-    {
-    } 
-private:
-    void log_error(std::string_view from, const std::exception& e) const 
-    {
-        std::println("[{}(): ip: {}: <Terminated with>: {}]", from, m_participant->ip(), e.what());
-    }
-    awaitable<bool> is_password_correct()
-    {
-        std::string_view pass_delim = "\r\n"sv;
-        size_t pass_buff_len        = 32;
-        std::string pass_buff;
-        try
-        { 
-            size_t n = co_await m_participant->async_read_password(pass_buff, pass_buff_len, pass_delim);
-            std::string_view response{pass_buff};
-            if (n <= pass_delim.length())
-            {
-                std::print("[from: {}; password]: {} => ", m_participant->ip(), response);
-                co_return false;
-            }    
-            response = response.substr(0, n - pass_delim.length());
-
-            std::print("[from: {}; password]: {} => ", m_participant->ip(), response);
-            if (m_private_room->password().compare(response) != 0)
-            {
-                co_return false;
-            }
-            co_return true;
-        }
-
-        catch (const asio::system_error& e) 
-        {
-            if (e.code() == asio::error::operation_aborted) 
-            {
-                log_error("is_password_correct.operation_aborted"sv, e);
-            }
-            else 
-            {
-                log_error("is_password_correct"sv, e);
-                throw;
-            }
-            co_return false;
-        }
-    }
-    awaitable<void> client_first_response()
-    {
-        m_should_accept = co_await is_password_correct();
-    }
-    bool is_rejected_session() const
-    {
-        return !m_should_accept;
-    }
-    awaitable<void> perform_handshake(asio::steady_timer& timer)
-    {
-        co_await client_first_response();
-        if(is_rejected_session() && !m_is_terminating) // wrong answer recieved
-        {
-            timer.cancel();
-            co_await reject_connection(); // wait for writer to dispatch message & close if necessary
-        }
-        if(!is_rejected_session())
-        {
-            timer.cancel();
-            co_await accept_connection();
-        }
-    }
-    awaitable<void> reject_connection()
-    {
-        if(!m_is_terminating)
-        {
-            m_is_terminating = true;
-
-            std::string server_response = "[reject]";
-            std::println("sending: {}", server_response);
-            m_private_room->deliver_private(server_response, m_participant);
-
-            std::println("Terminating {} [waiting {}ms to flush writer]", m_participant->ip(), m_write_response_await_ms);
-            asio::steady_timer t{(co_await asio::this_coro::executor), asio::chrono::microseconds(m_write_response_await_ms)};
-            co_await t.async_wait(asio::use_awaitable);
-
-            std::println("[from: {}: stoping...]", m_participant->ip());
-            throw asio::system_error(asio::error::connection_refused);
-        }
-    }
-    awaitable<void> accept_connection()
-    {
-        if(!m_is_terminating)
-        {
-            std::string server_response{"[accept]"};
-            m_private_room->deliver_private(server_response, m_participant);
-            std::println("{}", server_response);
-
-            // std::println("Terminating {} [waiting {}ms to flush writer]", m_ip, timeout_ms);
-            asio::steady_timer t{(co_await asio::this_coro::executor), asio::chrono::microseconds(m_write_response_await_ms)};
-            co_await t.async_wait(asio::use_awaitable);
-        }
-    }
-    awaitable<void> timeout_connection()
-    {
-        if(!m_is_terminating)
-        {
-            m_is_terminating = true;
-            std::string server_response{"[Timeout]"};
-            std::println("sending: {}", server_response);
-            m_private_room->deliver_private(server_response, m_participant);
-
-            std::println("Terminating {} [waiting {}ms to flush writer]", m_participant->ip(), m_write_response_await_ms);
-            asio::steady_timer t{(co_await asio::this_coro::executor), asio::chrono::microseconds(m_write_response_await_ms)};
-            co_await t.async_wait(asio::use_awaitable);
-
-            std::println("[from: {}: stoping...]", m_participant->ip());
-            throw asio::system_error(asio::error::timed_out); 
-        }
-    }
-    
-    awaitable<void> countdown_timer(asio::steady_timer& timer)
-    {
-        std::println("[from: {}]: Waiting {}s", m_participant->ip(), m_timeout_secs);
-        try
-        {
-            co_await timer.async_wait(asio::use_awaitable);
-            std::println("[from: {}]: done Waiting {}s", m_participant->ip(), m_timeout_secs);
-            
-            if (is_rejected_session() && !m_is_terminating)
-            {
-                co_await timeout_connection();
-            }
-        }
-        catch (const asio::system_error& e) 
-        {
-            if (e.code() == asio::error::operation_aborted) 
-            {
-                // log_error("time_out.cancel"sv, e);
-            }
-            else if (e.code() == asio::error::connection_refused) 
-            {
-                log_error("time_out.connection_refused"sv, e);
-            }
-            else if (e.code() == asio::error::timed_out) 
-            {
-                throw; //rethrow to handler
-            }
-            else
-            {
-                log_error("time_out/other", e);
-                throw;
-            }
-        }
-        catch(const std::exception& e)
-        {
-            log_error("time_out/???", e);
-            throw;
-        }
-    }    
-public:
-    awaitable<bool> try_handshake()
-    {
-        asio::steady_timer timer{co_await asio::this_coro::executor, std::chrono::seconds(m_timeout_secs)};
-        try
-        {
-            co_await (perform_handshake(timer) && countdown_timer(timer));  
-        }
-        catch (const asio::system_error& e) 
-        {
-            if (e.code() == asio::error::operation_aborted) 
-            {
-                log_error("try_hand_shake/operation_aborted"sv, e);
-            }
-            else if (e.code() == asio::error::connection_refused) 
-            {
-                log_error("try_hand_shake/connection_refused"sv, e);
-            }
-            else if (e.code() == asio::error::timed_out) 
-            {
-                log_error("try_hand_shake/timed_out"sv, e);
-            }
-            else
-            {
-                log_error("try_hand_shake/other", e);
-            }
-            co_return false;
-        }
-        co_return true;
-    }
-    template<typename AcceptanceToken, typename RejectionToken>
-    awaitable<void> try_connect(AcceptanceToken&& accept_callback, RejectionToken&& reject_callback)
-        requires std::invocable<AcceptanceToken> && std::invocable<RejectionToken>
-    {
-        asio::steady_timer timer{co_await asio::this_coro::executor, std::chrono::seconds(m_timeout_secs)};
-        try
-        {
-            co_await (perform_handshake(timer) && countdown_timer(timer));  
-        }
-        catch (const asio::system_error& e) 
-        {
-            if (e.code() == asio::error::operation_aborted) 
-            {
-                log_error("try_connect/operation_aborted"sv, e);
-            }
-            else if (e.code() == asio::error::connection_refused) 
-            {
-                log_error("try_connect/connection_refused"sv, e);
-            }
-            else if (e.code() == asio::error::timed_out) 
-            {
-                log_error("try_connect/timed_out"sv, e);
-            }
-            else
-            {
-                log_error("try_connect/other", e);
-            }
-            reject_callback();
-            co_return;
-        }
-        accept_callback();
-        co_return;
-    }
-    template<typename CompletionToken>
-    awaitable<void> try_connect(CompletionToken&& completion_token) requires std::invocable<CompletionToken,bool>
-    {
-        asio::steady_timer timer{co_await asio::this_coro::executor, std::chrono::seconds(m_timeout_secs)};
-        try
-        {
-            co_await (perform_handshake(timer) && countdown_timer(timer));  
-        }
-        catch (const asio::system_error& e) 
-        {
-            if (e.code() == asio::error::operation_aborted) 
-            {
-                log_error("try_connect/operation_aborted"sv, e);
-            }
-            else if (e.code() == asio::error::connection_refused) 
-            {
-                log_error("try_connect/connection_refused"sv, e);
-            }
-            else if (e.code() == asio::error::timed_out) 
-            {
-                log_error("try_connect/timed_out"sv, e);
-            }
-            else
-            {
-                log_error("try_connect/other", e);
-            }
-            completion_token(false);
-            co_return;
-        }
-        completion_token(true);
-        co_return;
-    }
-};
 
 class ChatSession : public IChatParticipant 
 {
+    std::string_view m_delim{"\r\n"sv};
+    size_t m_read_buff_len{1024};
     tcp::socket m_client_socket;
     asio::steady_timer m_timer;
     HandShaker m_hand_shaker;
     std::shared_ptr<IChatRoom> m_room;
-    // std::optional<bool> m_status{};
     std::deque<std::string> m_write_msgs;
     std::string m_ip{};
     bool m_stopped{};
-    // bool m_is_terminating{};
 public:
     ChatSession(tcp::socket socket, std::shared_ptr<IChatRoom> room)
         : m_client_socket(std::move(socket)), 
@@ -519,267 +174,24 @@ public:
         },
         asio::detached);
     }
-
     void deliver(const std::string& msg) override
     {
         m_write_msgs.push_back(msg);
         m_timer.cancel_one();
     }
-
 private:
-    // awaitable<void> handle_handshake()
-    // {
-    //     bool is_success = co_await m_hand_shaker.try_handshake();
-    //     if(!is_success)
-    //     {
-    //         std::println("chat_session terminate");
-    //         stop();
-    //         co_return;
-    //     }   
-
-    //     m_room->join_public(this);  
-    //     co_spawn(m_client_socket.get_executor(),[this]
-    //     {
-    //         return reader();
-    //     },
-    //     asio::detached);
-    // }
-    // awaitable<std::optional<bool>> is_password_correct()
-    // {
-    //     std::string_view pass_delim = "\r\n"sv;
-    //     size_t pass_buff_len        = 32;
-    //     std::string read_msg;
-    //     try
-    //     { 
-    //         std::size_t n = co_await asio::async_read_until(m_client_socket, asio::dynamic_buffer(read_msg, pass_buff_len), pass_delim, asio::use_awaitable);
-    //         std::string_view response{read_msg};
-    //         if (n <= pass_delim.length())
-    //         {
-    //             std::print("[from: {}; password]: {} => ", m_ip, response);
-    //             co_return false;
-    //         }    
-    //         response = response.substr(0, n - pass_delim.length());
-
-    //         std::print("[from: {}; password]: {} => ", m_ip, response);
-    //         if (m_room->password().compare(response) != 0)
-    //         {
-    //             co_return false;
-    //         }
-    //         co_return true;
-    //     }
-
-    //     catch (const asio::system_error& e) 
-    //     {
-    //         if (e.code() == asio::error::operation_aborted) 
-    //         {
-    //             // log_error("is_password_correct.operation_aborted"sv, e);
-    //         }
-    //         else 
-    //         {
-    //             log_error("is_password_correct"sv, e);
-    //             throw;
-    //         }
-    //         co_return false;
-    //     }
-    // }
-    // awaitable<void> client_first_response()
-    // {
-    //     m_status = co_await is_password_correct();
-    // }
-    // bool is_rejected_session() const
-    // {
-    //     return (m_status.has_value() && m_status.value() == false) || !m_status.has_value();
-    // }
-    // awaitable<void> perform_handshake(asio::steady_timer& timer)
-    // {
-    //     co_await client_first_response();
-    //     if(is_rejected_session() && !m_is_terminating) // wrong answer recieved
-    //     {
-    //         timer.cancel();
-    //         co_await reject_connection(); // wait for writer to dispatch message & close if necessary
-    //     }
-    //     if(!is_rejected_session())
-    //     {
-    //         timer.cancel();
-    //         co_await accept_connection();
-    //     }
-    // }
-    // awaitable<void> reject_connection()
-    // {
-    //     if(!m_is_terminating)
-    //     {
-    //         m_is_terminating = true;
-
-    //         std::string server_response{"[Reject]"};
-    //         std::println("sending: {}", server_response);
-    //         m_room->deliver_private(server_response, this);
-
-    //         size_t timeout_ms{100};
-    //         std::println("Terminating {} [waiting {}ms to flush writer]", m_ip, timeout_ms);
-    //         asio::steady_timer t{m_client_socket.get_executor(), asio::chrono::microseconds(timeout_ms)};
-    //         co_await t.async_wait(asio::use_awaitable);
-
-    //         std::println("[from: {}: stoping...]", m_ip);
-    //         throw asio::system_error(asio::error::connection_refused);
-    //     }
-    // }
-    // awaitable<void> accept_connection()
-    // {
-    //     if(!m_is_terminating)
-    //     {
-    //         std::string server_response{"[Accept]"};
-    //         m_room->deliver_private(server_response, this);
-    //         std::println("{}", server_response);
-
-    //         size_t timeout_ms{250};
-    //         // std::println("Terminating {} [waiting {}ms to flush writer]", m_ip, timeout_ms);
-    //         asio::steady_timer t{m_client_socket.get_executor(), asio::chrono::microseconds(timeout_ms)};
-    //         co_await t.async_wait(asio::use_awaitable);
-    //     }
-    // }
-    // awaitable<void> timeout_connection()
-    // {
-    //     if(!m_is_terminating)
-    //     {
-    //         m_is_terminating = true;
-
-    //         std::string server_response{"[Timeout]"};
-    //         std::println("sending: {}", server_response);
-    //         m_room->deliver_private(server_response, this);
-
-    //         size_t timeout_ms{250};
-    //         std::println("Terminating {} [waiting {}ms to flush writer]", m_ip, timeout_ms);
-    //         asio::steady_timer t{m_client_socket.get_executor(), asio::chrono::microseconds(timeout_ms)};
-    //         co_await t.async_wait(asio::use_awaitable);
-
-    //         std::println("[from: {}: stoping...]", m_ip);
-    //         throw asio::system_error(asio::error::timed_out); 
-    //     }
-    // }
     
-    // awaitable<void> time_out(asio::steady_timer& timer, size_t timeout_s)
-    // {
-    //     std::println("[from: {}]: Waiting {}s", m_ip, timeout_s);
-    //     try
-    //     {
-    //         co_await timer.async_wait(asio::use_awaitable);
-    //         std::println("[from: {}]: done Waiting {}s", m_ip, timeout_s);
-            
-    //         if (is_rejected_session() && !m_is_terminating)
-    //         {
-    //             co_await timeout_connection();
-    //         }
-    //     }
-    //     catch (const asio::system_error& e) 
-    //     {
-    //         if (e.code() == asio::error::operation_aborted) 
-    //         {
-    //             // log_error("time_out.cancel"sv, e);
-    //         }
-    //         else if (e.code() == asio::error::connection_refused) 
-    //         {
-    //             log_error("time_out.connection_refused"sv, e);
-    //         }
-    //         else if (e.code() == asio::error::timed_out) 
-    //         {
-    //             throw;
-    //         }
-    //         else
-    //         {
-    //             log_error("time_out/other", e);
-    //             throw;
-    //         }
-    //     }
-    //     catch(const std::exception& e)
-    //     {
-    //         log_error("time_out/???", e);
-    //         throw;
-    //     }
-    // }    
-    // // awaitable<void> try_handshake()
-    // {
-    //     size_t timeout_s{5};
-    //     asio::steady_timer timer{m_client_socket.get_executor(), asio::chrono::seconds(timeout_s)};
-    //     try
-    //     {
-    //         co_await (perform_handshake(timer) && time_out(timer, timeout_s));  
-    //     }
-    //     catch (const asio::system_error& e) 
-    //     {
-    //         if (e.code() == asio::error::operation_aborted) 
-    //         {
-    //             log_error("try_hand_shake/operation_aborted"sv, e);
-    //         }
-    //         else if (e.code() == asio::error::connection_refused) 
-    //         {
-    //             log_error("try_hand_shake/connection_refused"sv, e);
-    //         }
-    //         else if (e.code() == asio::error::timed_out) 
-    //         {
-    //             log_error("try_hand_shake/timed_out"sv, e);
-    //         }
-    //         else
-    //         {
-    //             log_error("try_hand_shake/other", e);
-    //         }
-    //         stop();
-    //         co_return;
-    //     }
-    //     catch(const std::exception& e)
-    //     {
-    //         log_error("try_hand_shake"sv, e);
-    //         stop();
-    //         co_return;
-    //     }
-        // std::string server_response{"[Accept]: yep yep yep!"};
-        // std::println("sending: {}", server_response);
-
-        // size_t timeout_ms{250};
-        // asio::steady_timer t{m_client_socket.get_executor(), asio::chrono::microseconds(timeout_ms)};
-        // m_room->deliver_private(server_response, this);
-        // co_await t.async_wait(asio::use_awaitable);
-
-        // m_room->join_public(this);  
-        // co_spawn(m_client_socket.get_executor(),[this]
-        // {
-        //     return reader();
-        // },
-        // asio::detached);
-
-        // co_spawn(m_client_socket.get_executor(), [this]
-        // {
-        //     return writer();
-        // },
-        // asio::detached);
-
-    // }
-
-
     awaitable<void> reader()
     {
-        std::string_view delim = "\r\n"sv;
         std::string read_msg;
-
-        // try
-        // {
-        //     co_await (perform_handshake() && time_out());  
-        // }
-        // catch(const std::exception& e)
-        // {
-        //     log_error("hand_shake"sv, e);
-        //     stop();
-        //     co_return;
-        // }
-        
-        
         try
         { 
             while(m_client_socket.is_open())
             {
-                std::size_t n = co_await asio::async_read_until(m_client_socket, asio::dynamic_buffer(read_msg, 1024), delim, asio::use_awaitable);
+                std::size_t n = co_await asio::async_read_until(m_client_socket, asio::dynamic_buffer(read_msg, m_read_buff_len), m_delim, asio::use_awaitable);
                 std::string_view response{read_msg};
                 
-                response = response.substr(0, response.find_last_of(delim)-1); // assumes it exits etc..
+                response = response.substr(0, response.find_last_of(m_delim)-1); // assumes it exits etc..
                 std::println("[from: {}]: {}", m_ip, response);
                 std::string response_str{response};
 
@@ -860,7 +272,6 @@ public:
         }, asio::detached);
     }
 private:
-    // c++ coroutine + async server
     awaitable<void> serve_forever(std::shared_ptr<IChatRoom> chat_room)
     {
         while (true)
@@ -881,9 +292,10 @@ int main(int argc, char* argv[])
     {
         asio::io_context io{};
         unsigned short port{6970};
+        std::string_view password{"LOUVRE"};
         TcpChatServer chat_server{io, port};
-        std::shared_ptr<IChatRoom> chat_room = std::make_shared<ChatRoom>();
 
+        std::shared_ptr<IChatRoom> chat_room = std::make_shared<ChatRoom>(password);
         chat_server.start(chat_room);
         std::println("Start serving on {}:{}", chat_server.ip(), chat_server.port());
 
@@ -891,7 +303,7 @@ int main(int argc, char* argv[])
     }
     catch (std::exception& e)
     {
-        std::cerr << "Exception: " << e.what() << "\n";
+        std::println("Exception: {} ", e.what());
     }
 
     return 0;
