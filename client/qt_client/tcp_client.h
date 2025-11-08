@@ -1,5 +1,5 @@
-#ifndef TCPCLIENT_H
-#define TCPCLIENT_H
+#ifndef TCP_CLIENT_H
+#define TCP_CLIENT_H
 
 #include <QObject>
 #include <QTcpSocket>
@@ -7,49 +7,39 @@
 #include <QHostInfo>
 #include <QHostAddress>
 #include <QIODevice>
+#include "interface_tcp_event_handler.h"
+#include "interface_tcp_model.h"
 
-class TcpClient : public QObject
+class TcpClient : public QObject, public ITcpClientModel
 {
     Q_OBJECT
 private:
+    ITcpEventHandler* m_presenter{};
     QTcpSocket m_socket{};
-    uint32_t m_port{};
+    uint16_t m_port{};
+    QString m_delim{"\r\n"};
     QString m_hostname{};
     QHostAddress m_server_address{};
     bool m_is_connected{false};
 
 public:
-    explicit TcpClient(uint32_t Port = 1234, QObject *parent = nullptr);
+    explicit TcpClient(uint16_t port, QObject *parent = nullptr);
     bool is_connected() const;
-// To be sent to GUI
-// can be sent to a Presenter?
-signals:
-    void ready_to_connect();
-    void connection_result(bool value, const QString& Ipv4);
-    void recieved_msg(const QString& msg);
-    void message_sent_status(QString msg, bool is_sent);
-    void is_disconneced_from_Host();
+    void set_port(uint16_t port) override;
+    void send_message(QString msg) override;
+    void disconnect() override;
+    void set_up_connection(QString hostname) override;
+    void attach(ITcpEventHandler* presenter) override;
 
-
-// connected to UI signals
-// can be transfered to Presenter?
-// should be public methods accessible to Presenter / TCPcontroller
-public slots:
-    void set_up_connection(QString hostname);
-    void disconnect();
-    void send_message(QString msg);
-
-// Connected to socket signals
+// connected internally to socket signals
 private slots:
     void look_up_host_infos(const QHostInfo &host);
     void connecting_to_host();
     void recieving_msg();
     void is_disconnected();
-
-    // should replace is_disconnected_from_Host
     void retrieve_error(QAbstractSocket::SocketError socketError);
 
 
 };
 
-#endif // TCPCLIENT_H
+#endif // TCP_CLIENT_H

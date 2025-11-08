@@ -24,11 +24,16 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(client_prototype
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        tcpclient.h tcpclient.cpp
-        iwindowcontroller.h
-        itcpcontroller.h
-
-
+        tcp_client.h
+        tcp_client.cpp
+        interface_presenter.h
+        interface_tcp_view.h
+        app_presenter.h
+        interface_tcp_client.h
+        interface_tcp_event_handler.h
+        interface_tcp_model.h
+        app_presenter.cpp
+        interface_presenter.h
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET client_prototype APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

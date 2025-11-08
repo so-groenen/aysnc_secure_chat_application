@@ -6,43 +6,19 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     set_Btn_to_connect();
-    // ui->connectBtn->setDisabled(true);
 }
 
-MainWindow::~MainWindow()
-{
-
-}
-
-void MainWindow::on_connectBtn_clicked()
-{
-    if(!m_is_connected)
-    {
-        QString hostname  {ui->HostEdit->text()};
-
-        ui->ResultEdit->setText("Awaiting response");
-        emit trying_to_connect(hostname);
-    }
-    else
-    {
-        emit disconnecting();
-        ui->ResultEdit->setText("");
-        m_is_connected = false;
-        set_Btn_to_connect();
-    }
-}
-
-void MainWindow::handle_connect_response(bool is_connected, const QString& msg)
+void MainWindow::handle_connect_response(bool is_connected, const QString &Ipv4)
 {
     if(is_connected)
     {
-        ui->ResultEdit->setText(msg); 
+        ui->ResultEdit->setText(Ipv4);
         ui->MessagesList->addItem("<Try connecting>");
         set_Btn_to_disconnect();
     }
     else
     {
-        ui->ResultEdit->setText(msg);
+        ui->ResultEdit->setText(Ipv4);
         set_Btn_to_connect();
     }
 
@@ -68,30 +44,52 @@ void MainWindow::handle_disconnect_from_host()
     m_is_connected = false;
 }
 
-void MainWindow::handle_message_sent_status(const QString &msg, bool is_sent) // NEEDS TO BE CONNECTED TO SLOT
+// TODO: Implement more nicely:
+void MainWindow::handle_msg_sent_status(QString msg, bool is_sent)
 {
-    const int last {ui->MessagesList->count()};
+    // const int last {ui->MessagesList->count()};
 
-    if (is_sent)
+    // if (is_sent)
+    // {
+    //     ui->MessagesList->addItem(m_name + ": " + msg);
+    //     ui->MessagesList->item(last)->setForeground(Qt::red);
+    // }
+    // else
+    // {
+    //     ui->MessagesList->addItem(" ! " + m_name + ": " + msg + "<sending fail>");
+    //     ui->MessagesList->item(last)->setForeground(Qt::gray);
+    // }
+}
+
+void MainWindow::attach(ITcpClient *presenter)
+{
+    m_presenter = presenter;
+}
+
+void MainWindow::on_connectBtn_clicked()
+{
+    if(!m_is_connected)
     {
-        ui->MessagesList->addItem(m_name + ": " + msg);
-        ui->MessagesList->item(last)->setForeground(Qt::red);
+        QString hostname  {ui->HostEdit->text()};
+
+        ui->ResultEdit->setText("Awaiting response");
+        m_presenter->set_up_connection(hostname);
     }
     else
     {
-        ui->MessagesList->addItem(" ! " + m_name + ": " + msg + "<sending fail>");
-        ui->MessagesList->item(last)->setForeground(Qt::gray);
+        m_presenter->disconnect();
+        ui->ResultEdit->setText("");
+        m_is_connected = false;
+        set_Btn_to_connect();
     }
 }
-
 
 void MainWindow::on_SendBtn_clicked()
 {
     if(m_is_connected)
     {
         const QString msg {ui->MessageEdit->text()};
-        emit sending_message(msg);
-
+        m_presenter->send_message(msg);
         const int last {ui->MessagesList->count()};
 
         ui->MessagesList->addItem(m_name + ": " + msg);
@@ -108,6 +106,7 @@ void MainWindow::set_Btn_to_connect()
 void MainWindow::set_Btn_to_disconnect()
 {
     ui->connectBtn->setText("Disconnect");
-
 }
+
+
 

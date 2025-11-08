@@ -161,7 +161,7 @@ public:
             }
         };
  
-        co_spawn(m_client_socket.get_executor(),[this,handle_connection_response]
+        co_spawn(m_client_socket.get_executor(),[this, handle_connection_response]
         {
             return m_hand_shaker.try_connect(handle_connection_response);
         },

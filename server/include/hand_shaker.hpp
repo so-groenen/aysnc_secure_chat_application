@@ -11,7 +11,7 @@
 #include "interface_private_broadcaster.hpp"
 
 using namespace std::string_view_literals;
-using namespace asio::experimental::awaitable_operators; // to use co_await (coro1 && coro2)
+using namespace asio::experimental::awaitable_operators; // to be able to write "co_await (coro1() && coro2())""
 
 class HandShaker
 {
@@ -117,9 +117,9 @@ private:
     {
         if(!m_is_terminating)
         {
-            std::string server_response{"[accept]"};
+            std::string server_response{m_accept_reps};
             m_private_room->deliver_private(server_response, m_participant);
-            std::println("{}", server_response);
+            std::println("{}", m_accept_reps);
 
             asio::steady_timer t{(co_await asio::this_coro::executor), asio::chrono::microseconds(m_write_response_await_ms)};
             co_await t.async_wait(asio::use_awaitable);
@@ -130,8 +130,8 @@ private:
         if(!m_is_terminating)
         {
             m_is_terminating = true;
-            std::string server_response{"[Timeout]"};
-            std::println("sending: {}", server_response);
+            std::string server_response{m_timeout_resp};
+            std::println("sending: {}", m_timeout_resp);
             m_private_room->deliver_private(server_response, m_participant);
 
             std::println("Terminating {} [waiting {}ms to flush writer]", m_participant->ip(), m_write_response_await_ms);
