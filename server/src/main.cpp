@@ -292,7 +292,7 @@ int main(int argc, char* argv[])
     {
         asio::io_context io{};
         unsigned short port{6970};
-        std::string_view password{"LOUVRE"};
+        std::string_view password{"louvre"};
         TcpChatServer chat_server{io, port};
 
         std::shared_ptr<IChatRoom> chat_room = std::make_shared<ChatRoom>(password);

@@ -34,6 +34,14 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         interface_tcp_model.h
         app_presenter.cpp
         interface_presenter.h
+        server_settings.h
+        server_settings.cpp
+        server_settings.ui
+        usernamedialog.h usernamedialog.cpp usernamedialog.ui
+        message_handler.h message_handler.cpp
+        message.h message.cpp
+
+        message_variant.h
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET client_prototype APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

@@ -8,11 +8,22 @@
 #include <iostream>
 #include <QString>
 #include <QMainWindow>
+#include "message.h"
+#include "message_handler.h"
+
+enum class HandShakeMode
+{
+    AwaitHandShake,
+    AwaitSessionId,
+    Ok
+};
 
 class AppPresenter : public IPresenter
 {
     std::unique_ptr<ITcpClientModel> m_model{};
     std::unique_ptr<ITcpView> m_view{};
+    std::unique_ptr<MessageHandler> m_message_handler{};
+    HandShakeMode m_handshake_mode{HandShakeMode::AwaitHandShake};
 public:
     AppPresenter(std::unique_ptr<ITcpClientModel> model, std::unique_ptr<ITcpView> gui);
 
@@ -24,7 +35,8 @@ public:
 
     // interface we expose to the TCP client:
     void handle_connect_response(bool value, const QString& Ipv4) override;
-    void handle_msg_reception(const QString& msg) override;
+    void handle_msg_reception(const MessageVariant& msg) override;
+
     void handle_disconnect_from_host() override;
     void handle_msg_sent_status(QString msg, bool is_sent) override;
 

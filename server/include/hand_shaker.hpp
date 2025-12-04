@@ -3,10 +3,11 @@
 
 #include <iostream>
 #include <print>
-#include <asio/steady_timer.hpp>
-#include <asio/use_awaitable.hpp>
-#include <asio/experimental/awaitable_operators.hpp>
-
+#include "asio/steady_timer.hpp"
+#include "asio/use_awaitable.hpp"
+#include "asio/experimental/awaitable_operators.hpp"
+#include <random>
+#include <format>
 #include "interface_controllable_broadcaster.hpp"
 #include "interface_private_broadcaster.hpp"
 
@@ -17,7 +18,7 @@ class HandShaker
 {
     std::string_view m_pass_delim {"\r\n"sv};
     size_t m_pass_buff_len{32};
-    std::string_view m_accept_reps{"[accept]"sv};
+    std::string m_accept_reps{"RANDOM_NUM"}; //gets init in the constructor
     std::string_view m_reject_resp{"[reject]"sv};
     std::string_view m_timeout_resp{"[timeout]"sv};
 
@@ -31,6 +32,8 @@ public:
     explicit HandShaker(std::shared_ptr<IPrivateBroadcaster> room, IControllableBroadcaster* participant)
         : m_private_room{room}, m_participant{participant} 
     {
+        auto device   = std::random_device{};
+        m_accept_reps = std::format("{}", device());
     } 
 private:
     void log_error(std::string_view from, const std::exception& e) const 
@@ -46,12 +49,12 @@ private:
             std::string_view response{pass_buff};
             if (n <= m_pass_delim.length())
             {
-                std::print("[from: {}; password]: {} => ", m_participant->ip(), response);
+                std::print("[from: {}; password]: \"{}\" [expect:\"{}\"] => ", m_participant->ip(), response, m_private_room->password());
                 co_return false;
             }    
             response = response.substr(0, n - m_pass_delim.length());
 
-            std::print("[from: {}; password]: {} => ", m_participant->ip(), response);
+            std::print("[from: {}; password]: \"{}\" [expect:\"{}\"] => ", m_participant->ip(), response, m_private_room->password());
             if (m_private_room->password().compare(response) != 0)
             {
                 co_return false;
@@ -119,10 +122,10 @@ private:
         {
             std::string server_response{m_accept_reps};
             m_private_room->deliver_private(server_response, m_participant);
-            std::println("{}", m_accept_reps);
+            std::println("Session id: {}", m_accept_reps);
 
-            asio::steady_timer t{(co_await asio::this_coro::executor), asio::chrono::microseconds(m_write_response_await_ms)};
-            co_await t.async_wait(asio::use_awaitable);
+            asio::steady_timer timer{(co_await asio::this_coro::executor), asio::chrono::microseconds(m_write_response_await_ms)};
+            co_await timer.async_wait(asio::use_awaitable);
         }
     }
     awaitable<void> timeout_connection()

@@ -11,7 +11,7 @@
 *.dylib
 
 #
- 
+server/asio-1.36.0
 
 # Qt-es
 object_script.*.Release

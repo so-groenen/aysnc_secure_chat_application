@@ -12,9 +12,9 @@ class ITcpClient
 public:
     virtual ~ITcpClient() = default;
     virtual void set_port(uint16_t port) = 0;
+    virtual void set_up_connection(QString hostname) = 0;
     virtual void send_message(QString msg) = 0;
     virtual void disconnect() = 0;
-    virtual void set_up_connection(QString hostname) = 0;
 };
 
 

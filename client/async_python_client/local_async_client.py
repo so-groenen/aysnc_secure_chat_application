@@ -14,7 +14,19 @@ async def connect(ip, port) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]
     reader, writer = await asyncio.open_connection(ip, port)
     return reader, writer
 
-async def handle_output(writer: asyncio.StreamWriter):
+async def handshake(writer: asyncio.StreamWriter, password: str):
+    print(f"Sending: \"{password}\"")
+    password += ENDING_CHAR
+    writer.write(password.encode())
+    await writer.drain()
+
+async def handle_output(writer: asyncio.StreamWriter, password: str):
+    try:
+        await handshake(writer, password)
+    except Exception as e:
+        print(f"An Error occured: {e}")
+        sys.exit(1)
+
     global IS_RUNNING
     session = PromptSession()
     while IS_RUNNING:
@@ -44,18 +56,23 @@ async def handle_input(reader: asyncio.StreamReader) -> None:
         
 
     
-async def main(ip, port):
+async def main(ip, port, password: str):
     reader, writer = await connect(ip, port)
-    return await asyncio.gather( handle_input(reader), handle_output(writer) )
+    return await asyncio.gather( handle_input(reader), handle_output(writer, password) )
 
-DEFAULT_PORT = 6970
+DEFAULT_PORT     = 6970
+DEFAULT_PASSWORD = "louvre"
+
 if __name__ == "__main__":
 
-    port = DEFAULT_PORT
+    port      = DEFAULT_PORT
+    password  = DEFAULT_PASSWORD
     if len(sys.argv) > 1:
-        port = int(sys.argv[1])
-        
+        port     = int(sys.argv[1])
+    if len(sys.argv) > 2:
+        password = sys.argv[2]
+ 
     print("Local client start")
     print(f"listening on port {port}")
     
-    asyncio.run(main(ip="127.0.0.1", port=port))
+    asyncio.run(main(ip="127.0.0.1", port=port, password=password))

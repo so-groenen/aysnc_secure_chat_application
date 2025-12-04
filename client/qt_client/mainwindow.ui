@@ -7,15 +7,15 @@
     <x>0</x>
     <y>0</y>
     <width>788</width>
-    <height>555</height>
+    <height>743</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="1">
+   <layout class="QVBoxLayout" name="verticalLayout_8">
+    <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QLabel" name="label">
@@ -25,16 +25,12 @@
          </font>
         </property>
         <property name="text">
-         <string>Server Name:</string>
+         <string>Server IP:</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="HostEdit">
-        <property name="text">
-         <string>LAPTOP-EMGNUV87</string>
-        </property>
-       </widget>
+       <widget class="QLineEdit" name="ResultEdit"/>
       </item>
       <item>
        <widget class="QPushButton" name="connectBtn">
@@ -49,36 +45,21 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label_4">
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-         </font>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
         </property>
-        <property name="text">
-         <string>Result:</string>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>113</width>
+          <height>20</height>
+         </size>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="ResultEdit"/>
+       </spacer>
       </item>
      </layout>
     </item>
-    <item row="0" column="2">
-     <spacer name="horizontalSpacer_2">
-      <property name="orientation">
-       <enum>Qt::Orientation::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>113</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="1" column="0" colspan="3">
+    <item>
      <widget class="QGroupBox" name="groupBox">
       <property name="font">
        <font>
@@ -88,79 +69,84 @@
       <property name="title">
        <string>Chat:</string>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout">
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0">
+        <layout class="QVBoxLayout" name="verticalLayout_7">
          <item>
-          <widget class="QLabel" name="label_3">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Messages:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>113</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QListWidget" name="MessagesList">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
-          <widget class="QLabel" name="label_2">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Message:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="MessageEdit">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="SendBtn">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Send</string>
-           </property>
-          </widget>
+          <layout class="QVBoxLayout" name="verticalLayout" stretch="5,0,70,5,10">
+           <item>
+            <widget class="QLabel" name="label_3">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Messages:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>113</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QListWidget" name="MessagesList">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_2">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>Message:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <item>
+              <widget class="QTextEdit" name="MessageEdit">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="SendBtn">
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Send</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
          </item>
         </layout>
        </item>
@@ -180,37 +166,23 @@
    </property>
    <widget class="QMenu" name="menuedit">
     <property name="title">
-     <string>edit</string>
+     <string>Settings</string>
     </property>
-    <widget class="QMenu" name="menuEdit_Server">
-     <property name="title">
-      <string>Edit Server</string>
-     </property>
-     <addaction name="actionEdit_Server"/>
-    </widget>
     <addaction name="separator"/>
-    <addaction name="menuEdit_Server"/>
-    <addaction name="actionExit"/>
+    <addaction name="actionEdit_Server"/>
+    <addaction name="actionEdit_Username"/>
    </widget>
    <addaction name="menuedit"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionExit">
-   <property name="text">
-    <string>Exit</string>
-   </property>
-  </action>
   <action name="actionEdit_Server">
    <property name="text">
-    <string>Edit Server</string>
+    <string>Edit server settings</string>
    </property>
   </action>
-  <action name="actionee">
+  <action name="actionEdit_Username">
    <property name="text">
-    <string>ee</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
+    <string>Edit Username</string>
    </property>
   </action>
  </widget>

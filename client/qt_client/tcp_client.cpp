@@ -34,6 +34,7 @@ void TcpClient::send_message(QString msg)
         }
         else
         {
+            qDebug() << "successfully sent:" << msg;
             is_sent = true;
         }
 
@@ -100,7 +101,6 @@ void TcpClient::connecting_to_host()
         qDebug() << "Socket opening failure";
         m_is_connected = false;
         m_presenter->handle_connect_response(m_is_connected, m_socket.errorString());
-
     }
 }
 
@@ -132,7 +132,8 @@ void TcpClient::is_disconnected()
 void TcpClient::retrieve_error(QAbstractSocket::SocketError socketError)
 {
     qDebug() << socketError;
-    m_presenter->handle_disconnect_from_host();
+    if (socketError == QAbstractSocket::RemoteHostClosedError)
+        m_presenter->handle_disconnect_from_host();
 }
 
 
