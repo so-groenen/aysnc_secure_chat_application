@@ -1,10 +1,10 @@
 #ifndef MESSAGE_VARIANT_H
 #define MESSAGE_VARIANT_H
 
-#include "message.h"
+#include "formatted_message.h"
 #include <variant>
 
-using MessageVariant = std::variant<QString, Message>;
+using MessageVariant = std::variant<QString, FormattedMessage>;
 
 
 #endif // MESSAGE_VARIANT_H

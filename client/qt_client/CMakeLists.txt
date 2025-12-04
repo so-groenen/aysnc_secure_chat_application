@@ -6,7 +6,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
@@ -37,9 +37,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         server_settings.h
         server_settings.cpp
         server_settings.ui
-        usernamedialog.h usernamedialog.cpp usernamedialog.ui
+        user_name_dialog.h user_name_dialog.cpp user_name_dialog.ui
         message_handler.h message_handler.cpp
-        message.h message.cpp
+        formatted_message.h formatted_message.cpp
 
         message_variant.h
     )

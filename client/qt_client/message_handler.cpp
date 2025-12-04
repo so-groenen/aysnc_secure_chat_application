@@ -16,26 +16,26 @@ QString MessageHandler::parse_to_send(QString msg) const
     return QString{QJsonDocument{json_msg}.toJson()};
 }
 
-Message MessageHandler::parse_to_receive(QString msg) const
+auto MessageHandler::parse_to_receive(QString msg) const -> std::expected<FormattedMessage, QString>
 {
     QJsonDocument doc = QJsonDocument::fromJson(msg.toUtf8());
-    //if(!doc.isObject())
-    //{
-    // HANDLE ERROR !!
-    //}
+    if(!doc.isObject())
+    {
+        return std::unexpected(msg);
+    }
     QJsonObject json_msg = doc.object();
 
-    QString content        = json_msg.value("body").toString();
-    QString user           = json_msg.value("from").toString();
-    qint64 user_session_id = json_msg.value("id").toInteger();
+    auto content        = json_msg.value("body").toString();
+    auto user           = json_msg.value("from").toString();
+    auto user_session_id = json_msg.value("id").toInteger(); //qint64
 
     qDebug() << "MESSAGE HANDLER: Parse to receive:";
     qDebug() << content;
     qDebug() << user;
     qDebug() << user_session_id;
 
-    bool is_current_user = (user_session_id == m_session_id);
-    Message parsed_msg{user, content, is_current_user};
+    bool is_current_user {user_session_id == m_session_id};
+    FormattedMessage parsed_msg{user, content, is_current_user};
 
     return parsed_msg;
 }

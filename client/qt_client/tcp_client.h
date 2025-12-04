@@ -24,12 +24,16 @@ private:
 
 public:
     explicit TcpClient(uint16_t port, QObject *parent = nullptr);
+
     bool is_connected() const;
+
+    //TCP interface
     void set_port(uint16_t port) override;
     void send_message(QString msg) override;
     void disconnect() override;
     void set_up_connection(QString hostname) override;
     void attach(ITcpEventHandler* presenter) override;
+    const QString& get_delimiter() const override;
 
 // connected internally to socket signals
 private slots:
@@ -37,7 +41,7 @@ private slots:
     void connecting_to_host();
     void recieving_msg();
     void is_disconnected();
-    void retrieve_error(QAbstractSocket::SocketError socketError);
+    void retrieve_error(QAbstractSocket::SocketError socket_error);
 
 
 };

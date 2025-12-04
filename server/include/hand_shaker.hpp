@@ -215,39 +215,39 @@ public:
         }
         co_return true;
     }
-    template<typename AcceptanceToken, typename RejectionToken>
-    awaitable<void> try_connect(AcceptanceToken&& accept_callback, RejectionToken&& reject_callback)
-        requires std::invocable<AcceptanceToken> && std::invocable<RejectionToken>
-    {
-        asio::steady_timer timer{co_await asio::this_coro::executor, std::chrono::seconds(m_timeout_secs)};
-        try
-        {
-            co_await (perform_handshake(timer) && countdown_timer(timer));  
-        }
-        catch (const asio::system_error& e) 
-        {
-            if (e.code() == asio::error::operation_aborted) 
-            {
-                log_error("try_connect/operation_aborted"sv, e);
-            }
-            else if (e.code() == asio::error::connection_refused) 
-            {
-                log_error("try_connect/connection_refused"sv, e);
-            }
-            else if (e.code() == asio::error::timed_out) 
-            {
-                log_error("try_connect/timed_out"sv, e);
-            }
-            else
-            {
-                log_error("try_connect/other", e);
-            }
-            reject_callback();
-            co_return;
-        }
-        accept_callback();
-        co_return;
-    }
+    // template<typename AcceptanceToken, typename RejectionToken>
+    // awaitable<void> try_connect(AcceptanceToken&& accept_callback, RejectionToken&& reject_callback)
+    //     requires std::invocable<AcceptanceToken> && std::invocable<RejectionToken>
+    // {
+    //     asio::steady_timer timer{co_await asio::this_coro::executor, std::chrono::seconds(m_timeout_secs)};
+    //     try
+    //     {
+    //         co_await (perform_handshake(timer) && countdown_timer(timer));  
+    //     }
+    //     catch (const asio::system_error& e) 
+    //     {
+    //         if (e.code() == asio::error::operation_aborted) 
+    //         {
+    //             log_error("try_connect/operation_aborted"sv, e);
+    //         }
+    //         else if (e.code() == asio::error::connection_refused) 
+    //         {
+    //             log_error("try_connect/connection_refused"sv, e);
+    //         }
+    //         else if (e.code() == asio::error::timed_out) 
+    //         {
+    //             log_error("try_connect/timed_out"sv, e);
+    //         }
+    //         else
+    //         {
+    //             log_error("try_connect/other", e);
+    //         }
+    //         reject_callback();
+    //         co_return;
+    //     }
+    //     accept_callback();
+    //     co_return;
+    // }
     template<typename CompletionToken>
     awaitable<void> try_connect(CompletionToken&& completion_token) requires std::invocable<CompletionToken,bool>
     {
@@ -277,6 +277,9 @@ public:
             completion_token(false);
             co_return;
         }
+        asio::steady_timer flush_session_id_timer{(co_await asio::this_coro::executor), asio::chrono::milliseconds(m_write_response_await_ms)};
+        co_await flush_session_id_timer.async_wait(asio::use_awaitable);
+        
         completion_token(true);
         co_return;
     }

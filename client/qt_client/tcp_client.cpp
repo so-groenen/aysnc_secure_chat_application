@@ -1,4 +1,5 @@
 #include "tcp_client.h"
+#include <expected>
 
 using enum QAbstractSocket::SocketState;
 
@@ -9,7 +10,6 @@ TcpClient::TcpClient(uint16_t Port, QObject *parent)
     QObject::connect(&m_socket, &QTcpSocket::disconnected, this, &TcpClient::is_disconnected);
     QObject::connect(&m_socket, &QTcpSocket::errorOccurred, this, &TcpClient::retrieve_error);
 }
-
 
 
 void TcpClient::set_port(uint16_t port)
@@ -24,22 +24,21 @@ void TcpClient::send_message(QString msg)
         qDebug() << "Sending:" << msg;
         msg.append(m_delim);
 
-        qint64 bytesWritten {m_socket.write(msg.toStdString().c_str())};
-        bool is_sent        {false};
+        qint64 bytes_written {m_socket.write(msg.toStdString().c_str())};
+        bool is_sent         {bytes_written != -1};
 
-        if(bytesWritten == -1)
+        if(!is_sent)
         {
             qDebug() << "error sending" << msg;
-            is_sent = false;
         }
         else
         {
             qDebug() << "successfully sent:" << msg;
-            is_sent = true;
         }
 
-        m_presenter->handle_msg_sent_status(msg, is_sent);
-        // TODO: implement in view
+        auto failed_msg = (is_sent)? std::nullopt : std::optional<QString>(msg);
+        m_presenter->handle_msg_send_failure(failed_msg);
+
     }
 }
 
@@ -52,17 +51,18 @@ void TcpClient::disconnect()
     }
 }
 
-void TcpClient::set_up_connection(QString hostname) //
+void TcpClient::set_up_connection(QString hostname) 
 {
     QHostInfo::lookupHost(hostname, this, &TcpClient::look_up_host_infos);
 }
 
 void TcpClient::look_up_host_infos(const QHostInfo &host)
 {
-    if (host.error() != QHostInfo::NoError) {
+    if (host.error() != QHostInfo::NoError)
+    {
         qDebug() << "Lookup failed:" << host.errorString();
 
-        m_presenter->handle_connect_response(false, "HOST NOT FOUND");
+        m_presenter->handle_connect_response(std::unexpected("HOST NOT FOUND"));
         return;
     }
 
@@ -87,26 +87,30 @@ void TcpClient::connecting_to_host()
 {
     m_socket.connectToHost(m_server_address, m_port);
     m_socket.waitForConnected();
-    if (m_socket.waitForConnected())
+    m_is_connected = m_socket.waitForConnected();
+
+    if (m_is_connected)
     {
         m_socket.open(QIODevice::ReadWrite);
         qDebug() << "Socket opened succesfully";
         qDebug() << "Socket descriptor:" << static_cast<qint64>(m_socket.socketDescriptor());
-
-        m_is_connected = true;
-        m_presenter->handle_connect_response(m_is_connected, m_server_address.toString());
+        m_presenter->handle_connect_response(m_server_address.toString());
     }
     else
     {
         qDebug() << "Socket opening failure";
-        m_is_connected = false;
-        m_presenter->handle_connect_response(m_is_connected, m_socket.errorString());
+        m_presenter->handle_connect_response(std::unexpected(m_socket.errorString()));
     }
 }
 
 void TcpClient::attach(ITcpEventHandler *presenter)
 {
     m_presenter = presenter;
+}
+
+const QString &TcpClient::get_delimiter() const
+{
+    return m_delim;
 }
 
 
@@ -123,16 +127,15 @@ void TcpClient::recieving_msg()
     m_presenter->handle_msg_reception(msg);
 }
 
-
 void TcpClient::is_disconnected()
 {
     qDebug() << "Socket is closed";
 }
 
-void TcpClient::retrieve_error(QAbstractSocket::SocketError socketError)
+void TcpClient::retrieve_error(QAbstractSocket::SocketError socket_error)
 {
-    qDebug() << socketError;
-    if (socketError == QAbstractSocket::RemoteHostClosedError)
+    qDebug() << socket_error;
+    if (socket_error == QAbstractSocket::RemoteHostClosedError)
         m_presenter->handle_disconnect_from_host();
 }
 

@@ -4,7 +4,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonDocument>
-#include "message.h"
+#include "formatted_message.h"
+#include <expected>
 
 
 class MessageHandler
@@ -14,7 +15,7 @@ class MessageHandler
 public:
     explicit MessageHandler(QString username, qint64 session_id);
     QString parse_to_send(QString msg) const;
-    Message parse_to_receive(QString msg) const;
+    auto parse_to_receive(QString msg) const -> std::expected<FormattedMessage, QString>;
     ~MessageHandler();
 };
 

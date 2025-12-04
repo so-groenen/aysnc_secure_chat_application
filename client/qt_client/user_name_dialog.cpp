@@ -1,5 +1,5 @@
-#include "usernamedialog.h"
-#include "ui_usernamedialog.h"
+#include "user_name_dialog.h"
+#include "ui_user_name_dialog.h"
 
 UsernameDialog::UsernameDialog(QString username, QWidget *parent)
     : QDialog(parent)

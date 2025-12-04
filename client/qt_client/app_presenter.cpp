@@ -8,7 +8,7 @@
 #include <limits>
 #include <concepts>
 #include <cassert>
-
+#include <ranges>
 
 AppPresenter::AppPresenter(std::unique_ptr<ITcpClientModel> model, std::unique_ptr<ITcpView> gui)
     : m_model{std::move(model)}, m_view{std::move(gui)}
@@ -46,11 +46,11 @@ void AppPresenter::set_up_connection(QString hostname)
     m_model->set_up_connection(hostname);
 }
 
-void AppPresenter::handle_connect_response(bool is_connected, const QString &ipv4)
+void AppPresenter::handle_connect_response(const ConnectionResult &connect_result)
 {
-    m_view->handle_connect_response(is_connected, ipv4);
+    m_view->handle_connect_response(connect_result);
 
-    if(!is_connected)
+    if(!connect_result)
         return;
 
     if(m_handshake_mode == HandShakeMode::AwaitHandShake)
@@ -62,15 +62,33 @@ void AppPresenter::handle_connect_response(bool is_connected, const QString &ipv
     }
 }
 
+
 void AppPresenter::handle_msg_reception(const MessageVariant &msg)
 {
-    assert(std::holds_alternative<QString>(msg) && "msg is a QString type");
-    QString message = std::get<QString>(msg);
+    assert(std::holds_alternative<QString>(msg) && "msg is of QString type");
+    QString messages = std::get<QString>(msg);
+
+    auto inbox = messages.split(m_model->get_delimiter());
+    // qDebug() << "messages: " << messages;
+    // qDebug() << "Split:";
+    // for(const auto& ms : std::as_const(inbox))
+    // {
+    //     qDebug() << ms;
+    // }
+
+    if(inbox.back().isEmpty())
+    {
+        inbox.pop_back();
+    }
 
     if(m_handshake_mode == HandShakeMode::AwaitSessionId)
     {
+        auto first_msg    = inbox.at(0);
+
+        qDebug() << "AWAITING SESSION ID:" << first_msg;
         bool ok           = false;
-        qint64 session_id = message.toLongLong(&ok);
+        qint64 session_id = first_msg.toLongLong(&ok);
+
         if(!ok)
         {
             qDebug() << "COULD NOT PARSE SESSION ID! USING RNG TO GENERATE";
@@ -81,10 +99,9 @@ void AppPresenter::handle_msg_reception(const MessageVariant &msg)
         {
             qDebug() << "GOT SESSION_ID: " << session_id;
         }
-
+        inbox.pop_front();
         m_message_handler = std::make_unique<MessageHandler>(m_view->get_username(), session_id);
         m_handshake_mode  = HandShakeMode::Ok;
-        return;
     }
 
     if(!m_message_handler)
@@ -93,9 +110,17 @@ void AppPresenter::handle_msg_reception(const MessageVariant &msg)
         return;
     }
 
-    qDebug() << "handle_msg_reception: " << message;
-    Message parsed_msg = m_message_handler->parse_to_receive(message);
-    m_view->handle_msg_reception(parsed_msg);
+    for(const auto& messages : std::as_const(inbox))
+    {
+        qDebug() << "handle_msg_reception: " << messages;
+        auto parsed_msg_res = m_message_handler->parse_to_receive(messages);
+        if(!parsed_msg_res)
+        {
+            m_view->handle_msg_reception(parsed_msg_res.error()); //pass QString msg if parsing Json fails;
+            continue;
+        }
+        m_view->handle_msg_reception(parsed_msg_res.value()); //pass Message
+    }
 }
 
 void AppPresenter::handle_disconnect_from_host()
@@ -105,9 +130,9 @@ void AppPresenter::handle_disconnect_from_host()
     m_handshake_mode = HandShakeMode::AwaitHandShake;
 }
 
-void AppPresenter::handle_msg_sent_status(QString msg, bool is_sent)
+void AppPresenter::handle_msg_send_failure(const MessageSendFailure &failed_msg)
 {
-    m_view->handle_msg_sent_status(msg, is_sent);
+    m_view->handle_msg_send_failure(failed_msg);
 }
 
 void AppPresenter::show() // ASSUME m_view derives from QMainWindow!!!! We inheriting virtual classes with QMainwindow don't compile//

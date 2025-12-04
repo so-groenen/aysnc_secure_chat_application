@@ -17,19 +17,19 @@
 #include <string>
 #include <utility>
 #include <system_error>
-#include <asio/awaitable.hpp>
-#include <asio/detached.hpp>
-#include <asio/co_spawn.hpp>
-#include <asio/io_context.hpp>
-#include <asio/ip/tcp.hpp>
-#include <asio/read_until.hpp>
-#include <asio/read.hpp>
-#include <asio/redirect_error.hpp>
-#include <asio/signal_set.hpp>
-#include <asio/basic_signal_set.hpp>
-#include <asio/steady_timer.hpp>
-#include <asio/use_awaitable.hpp>
-#include <asio/write.hpp>
+#include "asio/awaitable.hpp"
+#include "asio/detached.hpp"
+#include "asio/co_spawn.hpp"
+#include "asio/io_context.hpp"
+#include "asio/ip/tcp.hpp"
+#include "asio/read_until.hpp"
+#include "asio/read.hpp"
+#include "asio/redirect_error.hpp"
+#include "asio/signal_set.hpp"
+#include "asio/basic_signal_set.hpp"
+#include "asio/steady_timer.hpp"
+#include "asio/use_awaitable.hpp"
+#include "asio/write.hpp"
 
 
 
@@ -148,6 +148,7 @@ public:
         {
             if (connection_is_acctepd)
             {
+                m_room->join_public(this); 
                 co_spawn(m_client_socket.get_executor(), [this]
                 {
                     return reader();
@@ -183,6 +184,8 @@ private:
     
     awaitable<void> reader()
     {
+        //m_room->join_public(this);
+
         std::string read_msg;
         try
         { 
@@ -284,7 +287,7 @@ private:
 };
 
 
-//----------------------------------------------------------------------
+
 
 int main(int argc, char* argv[])
 {

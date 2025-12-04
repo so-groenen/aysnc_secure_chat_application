@@ -1,5 +1,5 @@
-#ifndef USERNAMEDIALOG_H
-#define USERNAMEDIALOG_H
+#ifndef USER_NAME_DIALOG_H
+#define USER_NAME_DIALOG_H
 
 #include <QDialog>
 #include <QString>
@@ -21,4 +21,4 @@ private:
     Ui::UsernameDialog *ui;
 };
 
-#endif // USERNAMEDIALOG_H
+#endif // USER_NAME_DIALOG_H

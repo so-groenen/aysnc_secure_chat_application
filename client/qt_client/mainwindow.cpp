@@ -3,7 +3,7 @@
 #include <cassert>
 
 #include "server_settings.h"
-#include "usernamedialog.h"
+#include "user_name_dialog.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui{new Ui::MainWindow}
@@ -24,22 +24,22 @@ void MainWindow::set_password(QStringView password)
     m_password = QString{password};
 }
 
-void MainWindow::handle_connect_response(bool is_connected, const QString &Ipv4)
+void MainWindow::handle_connect_response(const ConnectionResult &connect_result)
 {
-    if(is_connected)
+    if(connect_result)
     {
-        ui->ResultEdit->setText(Ipv4);
+        ui->ResultEdit->setText(connect_result.value()); // ip addresse
         ui->MessagesList->addItem("<CONNECTED>");
         set_Btn_to_disconnect();
     }
     else
     {
         ui->MessagesList->addItem("<COULD NOT CONNECT>");
-        ui->ResultEdit->setText(Ipv4);
+        ui->ResultEdit->setText(connect_result.error()); // error msg
         set_Btn_to_connect();
     }
 
-    m_is_connected = is_connected;
+    m_is_connected = connect_result.has_value();
 }
 
 
@@ -49,10 +49,19 @@ void MainWindow::handle_msg_reception(const MessageVariant &msg)
     if(m_is_connected)
     {
         const int last {ui->MessagesList->count()};
-        assert(std::holds_alternative<Message>(msg) && "msg is a Message type");
 
-        Message message = std::get<Message>(msg);
+        if(std::holds_alternative<QString>(msg))
+        {
+            QString message = std::get<QString>(msg);
 
+            qDebug() << "UNKNOWN SENDER: RAW UNPARSED MSG:";
+            ui->MessagesList->addItem("<Unknown>: " + message);
+            ui->MessagesList->item(last)->setForeground(Qt::black);
+            return;
+        }
+
+
+        FormattedMessage message = std::get<FormattedMessage>(msg);
         if(message.is_current_user())
         {
             qDebug() << "CURRENT USER OK!";
@@ -77,17 +86,18 @@ void MainWindow::handle_disconnect_from_host()
     m_is_connected = false;
 }
 
-void MainWindow::handle_msg_sent_status(QString msg, bool is_sent)
+void MainWindow::handle_msg_send_failure(const MessageSendFailure &failed_msg)
 {
-    const int last {ui->MessagesList->count()};
-    qDebug() << "Message sent status: " << is_sent;
+    qDebug() << "Message sent status: " << !failed_msg.has_value();
 
-    if(!is_sent)
+    if(failed_msg.has_value())
     {
-        ui->MessagesList->addItem("! Me: " + msg + "<sending fail>");
+        const int last {ui->MessagesList->count()};
+        ui->MessagesList->addItem("! Me: " + failed_msg.value() + "<sending fail>");
         ui->MessagesList->item(last)->setForeground(Qt::gray);
     }
 }
+
 
 const QString &MainWindow::get_password() const
 {

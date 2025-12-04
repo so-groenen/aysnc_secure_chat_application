@@ -8,7 +8,7 @@
 #include <iostream>
 #include <QString>
 #include <QMainWindow>
-#include "message.h"
+#include "formatted_message.h"
 #include "message_handler.h"
 
 enum class HandShakeMode
@@ -34,13 +34,11 @@ public:
     void set_up_connection(QString hostname) override;
 
     // interface we expose to the TCP client:
-    void handle_connect_response(bool value, const QString& Ipv4) override;
+    void handle_connect_response(const ConnectionResult& connect_result) override;
     void handle_msg_reception(const MessageVariant& msg) override;
-
     void handle_disconnect_from_host() override;
-    void handle_msg_sent_status(QString msg, bool is_sent) override;
+    void handle_msg_send_failure(const MessageSendFailure& failed_msg) override;
 
-    // this function is very hacky, since we down cast ITcpView to a MainWindow ...
     void show() override;
 };
 

@@ -5,8 +5,7 @@
 
 
 ServerSettings::ServerSettings(uint16_t port, QString password, QString host, QWidget *parent)
-    : QDialog(parent)
-    , ui(std::make_unique<Ui::ServerSettings>())
+    : QDialog(parent), ui(std::make_unique<Ui::ServerSettings>())
 {
     ui->setupUi(this);
     ui->passwordEdit->setText(password);
@@ -15,8 +14,6 @@ ServerSettings::ServerSettings(uint16_t port, QString password, QString host, QW
     auto port_str = QString::number(port, 10);
     ui->portEdit->setValidator(m_port_validator.get());
     ui->portEdit->setText(port_str);
-
-
 }
 
 ServerSettings::~ServerSettings()
@@ -32,7 +29,7 @@ uint16_t ServerSettings::port() const
 {
     QStringView view{ui->portEdit->text()};
     bool success    {false};
-    uint16_t port = static_cast<uint16_t>(view.toInt(&success));
+    auto port = static_cast<uint16_t>(view.toInt(&success));
     if(!success)
     {
         qDebug() << "Failed converting port:" << view;
