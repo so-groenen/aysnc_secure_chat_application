@@ -5,6 +5,8 @@
 #include "interface_tcp_event_handler.h"
 
 
+// The TcpClientModel is a TCP Client which can attach to an Event Handler (the presenter) that will be called to, well, handle events
+
 class ITcpClientModel : public ITcpClient
 {
 public:

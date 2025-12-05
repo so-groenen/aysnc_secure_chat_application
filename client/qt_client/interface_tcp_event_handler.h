@@ -7,9 +7,12 @@
 #include "formatted_message.h"
 
 
-// When an event occurs in TCP Client, we forward it to the presenter to parse and perform error handling
-// THe Presenter will get raw Messages, and format it for the GUI/View
-// THe GUI will have its own implementation to display the results
+// When an event occurs in TCP Client, the TCP client needs an event handler
+// The presenters goal is to act as a layer to abstract the GUI and perform Message Formatting & error handling
+// For ex, when a message arrives, the TCP client will call the "handle_msg_reception" of the Presenter
+// to forward raw messages.
+// The presenter will then in turn call the GUI's "handle_msg_reception" to display formated messages
+
 
 using ConnectionError    = QString;
 using IPAdress           = QString;

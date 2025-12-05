@@ -12,9 +12,10 @@ MainWindow::MainWindow(QWidget *parent)
     set_Btn_to_connect();
     ui->SendBtn->setEnabled(m_is_connected);
 
-    set_user_info();
+    dispatch_user_info_dialog();
     QObject::connect(ui->MessageEdit, &MyTextEdit::pressEnterEvent, this, &MainWindow::on_SendBtn_clicked);
 
+    ui->MessagesList->setStyleSheet("QListWidget {padding-bottom: 10px;}");
 }
 
 void MainWindow::set_default_hostname(QStringView host)
@@ -31,6 +32,10 @@ void MainWindow::handle_connect_response(const ConnectionResult &connect_result)
 {
     if(connect_result)
     {
+        // IF SHOULD CLEAR MESSAGE ON RECONNECT
+        if(m_clear_history_on_reconnect)
+            ui->MessagesList->clear();
+
         ui->ResultEdit->setText(connect_result.value()); // ip addresse
         ui->MessagesList->addItem("<CONNECTED>");
         set_Btn_to_disconnect();
@@ -41,7 +46,7 @@ void MainWindow::handle_connect_response(const ConnectionResult &connect_result)
         ui->ResultEdit->setText(connect_result.error()); // error msg
         set_Btn_to_connect();
     }
-
+    ui->MessagesList->scrollToBottom();
     m_is_connected = connect_result.has_value();
     ui->SendBtn->setEnabled(m_is_connected);
 }
@@ -50,35 +55,41 @@ void MainWindow::handle_connect_response(const ConnectionResult &connect_result)
 
 void MainWindow::handle_msg_reception(const MessageVariant &msg)
 {
-    if(m_is_connected)
+    if(!m_is_connected)
+        return;
+
+    const int last {ui->MessagesList->count()};
+
+    if(std::holds_alternative<QString>(msg))
     {
-        const int last {ui->MessagesList->count()};
+        QString message = std::get<QString>(msg);
 
-        if(std::holds_alternative<QString>(msg))
-        {
-            QString message = std::get<QString>(msg);
-
-            qDebug() << "UNKNOWN SENDER: RAW UNPARSED MSG:";
-            ui->MessagesList->addItem("<Unknown>: " + message);
-            ui->MessagesList->item(last)->setForeground(Qt::black);
-            return;
-        }
-
-
-        FormattedMessage message = std::get<FormattedMessage>(msg);
-        if(message.is_current_user())
-        {
-            qDebug() << "CURRENT USER OK!";
-            ui->MessagesList->addItem("Me: " + message.content());
-        }
-        else
-        {
-            qDebug() << "NOT CURRENT USER";
-            qDebug() << sizeof(message.color());
-            ui->MessagesList->addItem(message.username() + ": " + message.content());
-        }
-        ui->MessagesList->item(last)->setForeground(message.color());
+        qDebug() << "UNKNOWN SENDER: RAW UNPARSED MSG:";
+        ui->MessagesList->addItem("<Unknown>: " + message);
+        ui->MessagesList->item(last)->setForeground(Qt::black);
+        return;
     }
+
+    FormattedMessage message = std::get<FormattedMessage>(msg);
+    if(message.is_current_user())
+    {
+        qDebug() << "CURRENT USER OK!";
+
+        QListWidgetItem* message_item = new QListWidgetItem(message.content());
+
+        message_item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        ui->MessagesList->addItem(message_item);
+        // ui->MessagesList->addItem("Me: " + message.content());
+    }
+    else
+    {
+        qDebug() << "NOT CURRENT USER";
+        qDebug() << sizeof(message.color());
+        ui->MessagesList->addItem(message.username() + ": " + message.content());
+    }
+
+    ui->MessagesList->item(last)->setForeground(message.color());
+    ui->MessagesList->scrollToBottom();
 }
 
 void MainWindow::handle_disconnect_from_host()
@@ -120,14 +131,15 @@ QColor MainWindow::get_font_color() const
 }
 
 
-void MainWindow::set_user_info()
+void MainWindow::dispatch_user_info_dialog()
 {
-    UsernameDialog user_diaglog{m_username, m_my_color};
+    UsernameDialog user_diaglog{m_username, m_my_color, m_clear_history_on_reconnect};
     user_diaglog.setModal(true);
     if(user_diaglog.exec() ==  QDialog::Accepted)
     {
-        m_username = user_diaglog.get_username();
-        m_my_color = user_diaglog.selected_color();
+        m_username                   = user_diaglog.get_username();
+        m_my_color                   = user_diaglog.selected_color();
+        m_clear_history_on_reconnect = user_diaglog.should_clear_history_on_reconnect();
     }
 }
 
@@ -147,6 +159,8 @@ void MainWindow::on_connectBtn_clicked()
     {
         m_presenter->disconnect();
         ui->MessagesList->addItem("<DISCONNECTED>");
+        ui->MessagesList->scrollToBottom();
+
         ui->ResultEdit->setText("");
         m_is_connected = false;
         ui->SendBtn->setEnabled(m_is_connected);
@@ -203,7 +217,7 @@ void MainWindow::on_actionEdit_Server_triggered()
 
 void MainWindow::on_actionEdit_Username_triggered()
 {
-    set_user_info();
+    dispatch_user_info_dialog();
 }
 
 

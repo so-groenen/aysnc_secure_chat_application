@@ -186,7 +186,7 @@
   </action>
   <action name="actionEdit_Username">
    <property name="text">
-    <string>Edit user info</string>
+    <string>Edit user settings</string>
    </property>
   </action>
  </widget>

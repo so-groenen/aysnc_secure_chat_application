@@ -9,7 +9,7 @@
 *.so.*
 *.dll
 *.dylib
-
+.VSCodeCounter
 #
 server/asio-1.36.0
 

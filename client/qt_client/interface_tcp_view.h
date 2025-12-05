@@ -5,6 +5,9 @@
 #include <QMainWindow>
 #include <QString>
 
+// The TCP view (the GUI) reacts upon message reception, connection failures etc
+// The "raw" low level TCP events are abstracted via the presenter which formats & perform error handling
+// The View (ie, the Qt GUI) also needs to expose some methods so that the presenter is able to correctly format messages
 
 class ITcpView : public ITcpEventHandler
 {

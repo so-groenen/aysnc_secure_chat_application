@@ -14,10 +14,11 @@ class UsernameDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit UsernameDialog(QString username, QColor color, QWidget *parent = nullptr);
+    explicit UsernameDialog(QString username, QColor color, bool clear_history_on_reconnect, QWidget *parent = nullptr);
     ~UsernameDialog();
     QString get_username() const;
     const QColor& selected_color() const;
+    bool should_clear_history_on_reconnect() const;
 private slots:
     void on_pushButton_clicked();
 

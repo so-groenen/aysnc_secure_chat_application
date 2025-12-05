@@ -32,8 +32,9 @@ private:
     QString m_hostname{""};                
     void set_Btn_to_connect();
     void set_Btn_to_disconnect();
-    void set_user_info();
+    void dispatch_user_info_dialog();
     QColor m_my_color{255, 182, 193};
+    bool m_clear_history_on_reconnect{true};
 
 public:
     ~MainWindow();
