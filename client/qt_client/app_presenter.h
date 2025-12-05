@@ -29,9 +29,9 @@ public:
 
     // interface we expose to the gui:
     void set_port(uint16_t port) override;
-    void send_message(QString msg) override;
+    void send_message(const QString& msg) override;
     void disconnect() override;
-    void set_up_connection(QString hostname) override;
+    void set_up_connection(const QString& hostname) override;
 
     // interface we expose to the TCP client:
     void handle_connect_response(const ConnectionResult& connect_result) override;

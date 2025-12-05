@@ -6,6 +6,8 @@
 #include <QString>
 #include <qstring.h>
 #include <QValidator>
+#include <QColorDialog>
+
 
 constexpr uint16_t MIN_PORT = 0;
 constexpr uint16_t MAX_PORT = 65535;
@@ -27,7 +29,8 @@ public:
     QString host() const;
 
 private:
-    std::unique_ptr<Ui::ServerSettings> ui;
+    //std::unique_ptr<Ui::ServerSettings> ui;
+    Ui::ServerSettings* ui;
     std::unique_ptr<QValidator> m_port_validator{std::make_unique<QIntValidator>(MIN_PORT, MAX_PORT)};
 };
 

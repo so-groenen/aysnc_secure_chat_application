@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "my_text_edit.h"
 #include <QMainWindow>
 #include <memory>
 #include "interface_presenter.h"
@@ -31,13 +32,12 @@ private:
     QString m_hostname{""};                
     void set_Btn_to_connect();
     void set_Btn_to_disconnect();
-    void set_username();
+    void set_user_info();
+    QColor m_my_color{255, 182, 193};
 
 public:
     ~MainWindow();
     MainWindow(QWidget *parent = nullptr);
-    void set_default_hostname(QStringView host);
-    void set_password(QStringView password);
 
     // TCP Event Handler
     void handle_connect_response(const ConnectionResult& connect_result) override;
@@ -49,6 +49,10 @@ public:
     void attach(ITcpClient* presenter) override;
     const QString& get_password() const override;
     const QString& get_username() const override;
+    QColor get_font_color() const override;
+    void set_default_hostname(QStringView host) override;
+    void set_password(QStringView password) override;
+
 
 private slots:
     void on_SendBtn_clicked();

@@ -23,13 +23,14 @@ void AppPresenter::set_port(uint16_t port)
     m_model->set_port(port);
 }
 
-void AppPresenter::send_message(QString msg)
+void AppPresenter::send_message(const QString& msg)
 {
     if(!m_message_handler)
     {
         qDebug() << "Message handler not init!!";
         return;
     }
+
     QString parsed_msg = m_message_handler->parse_to_send(msg);
     m_model->send_message(parsed_msg);
 }
@@ -41,7 +42,7 @@ void AppPresenter::disconnect()
     m_handshake_mode = HandShakeMode::AwaitHandShake;
 }
 
-void AppPresenter::set_up_connection(QString hostname)
+void AppPresenter::set_up_connection(const QString& hostname)
 {
     m_model->set_up_connection(hostname);
 }
@@ -100,7 +101,7 @@ void AppPresenter::handle_msg_reception(const MessageVariant &msg)
             qDebug() << "GOT SESSION_ID: " << session_id;
         }
         inbox.pop_front();
-        m_message_handler = std::make_unique<MessageHandler>(m_view->get_username(), session_id);
+        m_message_handler = std::make_unique<MessageHandler>(m_view->get_username(), m_view->get_font_color(), session_id);
         m_handshake_mode  = HandShakeMode::Ok;
     }
 

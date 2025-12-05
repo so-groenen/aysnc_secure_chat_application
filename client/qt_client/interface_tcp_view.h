@@ -13,6 +13,10 @@ public:
     virtual void attach(ITcpClient* presenter) = 0;
     virtual const QString& get_password() const = 0;
     virtual const QString& get_username() const = 0;
+    virtual QColor get_font_color() const = 0;
+    virtual void set_default_hostname(QStringView host) = 0;
+    virtual void set_password(QStringView password) = 0;
+
 };
 
 

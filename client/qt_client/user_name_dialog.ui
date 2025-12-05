@@ -7,32 +7,39 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>143</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>ChatApp</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
+   <item row="1" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>User Name</string>
+          <string>Username:</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QLineEdit" name="userEdit"/>
        </item>
+       <item>
+        <widget class="QPushButton" name="pushButton">
+         <property name="text">
+          <string>Font color</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
     </layout>
    </item>
-   <item row="1" column="0">
+   <item row="3" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Orientation::Horizontal</enum>

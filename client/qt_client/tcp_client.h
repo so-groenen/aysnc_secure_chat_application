@@ -29,9 +29,9 @@ public:
 
     //TCP interface
     void set_port(uint16_t port) override;
-    void send_message(QString msg) override;
+    void send_message(const QString& msg) override;
     void disconnect() override;
-    void set_up_connection(QString hostname) override;
+    void set_up_connection(const QString& hostname) override;
     void attach(ITcpEventHandler* presenter) override;
     const QString& get_delimiter() const override;
 

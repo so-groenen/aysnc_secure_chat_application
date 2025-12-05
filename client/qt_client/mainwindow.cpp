@@ -10,8 +10,11 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     set_Btn_to_connect();
+    ui->SendBtn->setEnabled(m_is_connected);
 
-    set_username();
+    set_user_info();
+    QObject::connect(ui->MessageEdit, &MyTextEdit::pressEnterEvent, this, &MainWindow::on_SendBtn_clicked);
+
 }
 
 void MainWindow::set_default_hostname(QStringView host)
@@ -40,6 +43,7 @@ void MainWindow::handle_connect_response(const ConnectionResult &connect_result)
     }
 
     m_is_connected = connect_result.has_value();
+    ui->SendBtn->setEnabled(m_is_connected);
 }
 
 
@@ -66,14 +70,14 @@ void MainWindow::handle_msg_reception(const MessageVariant &msg)
         {
             qDebug() << "CURRENT USER OK!";
             ui->MessagesList->addItem("Me: " + message.content());
-            ui->MessagesList->item(last)->setForeground(Qt::white);
         }
         else
         {
             qDebug() << "NOT CURRENT USER";
+            qDebug() << sizeof(message.color());
             ui->MessagesList->addItem(message.username() + ": " + message.content());
-            ui->MessagesList->item(last)->setForeground(Qt::red);
         }
+        ui->MessagesList->item(last)->setForeground(message.color());
     }
 }
 
@@ -84,6 +88,7 @@ void MainWindow::handle_disconnect_from_host()
 
     set_Btn_to_connect();
     m_is_connected = false;
+    ui->SendBtn->setEnabled(m_is_connected);
 }
 
 void MainWindow::handle_msg_send_failure(const MessageSendFailure &failed_msg)
@@ -109,14 +114,20 @@ const QString &MainWindow::get_username() const
     return m_username;
 }
 
-
-void MainWindow::set_username()
+QColor MainWindow::get_font_color() const
 {
-    UsernameDialog user_diaglog{m_username};
+    return m_my_color;
+}
+
+
+void MainWindow::set_user_info()
+{
+    UsernameDialog user_diaglog{m_username, m_my_color};
     user_diaglog.setModal(true);
     if(user_diaglog.exec() ==  QDialog::Accepted)
     {
         m_username = user_diaglog.get_username();
+        m_my_color = user_diaglog.selected_color();
     }
 }
 
@@ -135,9 +146,10 @@ void MainWindow::on_connectBtn_clicked()
     else
     {
         m_presenter->disconnect();
-        ui->MessagesList->addItem("<DICONNECTED>");
+        ui->MessagesList->addItem("<DISCONNECTED>");
         ui->ResultEdit->setText("");
         m_is_connected = false;
+        ui->SendBtn->setEnabled(m_is_connected);
         set_Btn_to_connect();
     }
 }
@@ -148,7 +160,7 @@ void MainWindow::on_SendBtn_clicked()
     {
         const QString msg {ui->MessageEdit->toPlainText()};
         m_presenter->send_message(msg);
-
+        ui->MessageEdit->clear();
     }
 }
 
@@ -191,7 +203,7 @@ void MainWindow::on_actionEdit_Server_triggered()
 
 void MainWindow::on_actionEdit_Username_triggered()
 {
-    set_username();
+    set_user_info();
 }
 
 

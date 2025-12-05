@@ -17,14 +17,15 @@ void TcpClient::set_port(uint16_t port)
     m_port = port;
 }
 
-void TcpClient::send_message(QString msg)
+void TcpClient::send_message(const QString& msg)
 {
     if(is_connected())
     {
         qDebug() << "Sending:" << msg;
-        msg.append(m_delim);
+        // msg.append(m_delim);
+        QString message = msg + m_delim;
 
-        qint64 bytes_written {m_socket.write(msg.toStdString().c_str())};
+        qint64 bytes_written {m_socket.write(message.toStdString().c_str())};
         bool is_sent         {bytes_written != -1};
 
         if(!is_sent)
@@ -51,7 +52,7 @@ void TcpClient::disconnect()
     }
 }
 
-void TcpClient::set_up_connection(QString hostname) 
+void TcpClient::set_up_connection(const QString& hostname)
 {
     QHostInfo::lookupHost(hostname, this, &TcpClient::look_up_host_infos);
 }
