@@ -24,3 +24,5 @@ bool FormattedMessage::is_current_user() const
 {
     return m_is_current_user;
 }
+
+

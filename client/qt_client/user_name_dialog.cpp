@@ -1,13 +1,24 @@
 #include "user_name_dialog.h"
 #include "ui_user_name_dialog.h"
 
-UsernameDialog::UsernameDialog(QString username, QColor color, bool clear_history_on_reconnect, QWidget *parent)
-    : QDialog(parent), m_selected_color{color},
+UsernameDialog::UsernameDialog(QString username, QColor color, DelegateMode delegate_mode, QWidget *parent)
+    : QDialog(parent), m_selected_color{color}, m_delegate_mode{delegate_mode},
      ui(new Ui::UsernameDialog)
 {
     ui->setupUi(this);
     ui->userEdit->setText(username);
-    ui->HistoryCheckBox->setChecked(clear_history_on_reconnect);
+
+    switch (delegate_mode)
+    {
+        case DelegateMode::BubbleDelegate:
+            ui->bubbleRadio->toggle();
+            break;
+        case DelegateMode::LineMessageDelegate:
+            ui->lineRadio->toggle();
+            break;
+        default:
+            break;
+    }
 }
 
 UsernameDialog::~UsernameDialog()
@@ -25,10 +36,12 @@ const QColor &UsernameDialog::selected_color() const
     return m_selected_color;
 }
 
-bool UsernameDialog::should_clear_history_on_reconnect() const
+DelegateMode UsernameDialog::get_delegate_mode() const
 {
-    return ui->HistoryCheckBox->isChecked();
+    return m_delegate_mode;
 }
+
+
 
 void UsernameDialog::on_pushButton_clicked()
 {
@@ -40,5 +53,19 @@ void UsernameDialog::on_pushButton_clicked()
         m_selected_color = color_dialog.selectedColor();
         qDebug() << "QColorDialog: selected: " << m_selected_color;
     }
+}
+
+
+void UsernameDialog::on_bubbleRadio_toggled(bool checked)
+{
+    if(checked)
+        m_delegate_mode = DelegateMode::BubbleDelegate;
+}
+
+
+void UsernameDialog::on_lineRadio_toggled(bool checked)
+{
+    if(checked)
+        m_delegate_mode = DelegateMode::LineMessageDelegate;
 }
 

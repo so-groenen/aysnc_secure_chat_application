@@ -10,20 +10,23 @@
 #include <QMainWindow>
 #include "formatted_message.h"
 #include "message_handler.h"
+#include "hand_shaker.h"
 
-enum class HandShakeMode
-{
-    AwaitHandShake,
-    AwaitSessionId,
-    Ok
-};
+// enum class HandShakeMode
+// {
+//     AwaitHandShake,
+//     AwaitSessionId,
+//     Ok
+// };
 
 class AppPresenter : public IPresenter
 {
     std::unique_ptr<ITcpClientModel> m_model{};
     std::unique_ptr<ITcpView> m_view{};
     std::unique_ptr<MessageHandler> m_message_handler{};
-    HandShakeMode m_handshake_mode{HandShakeMode::AwaitHandShake};
+    HandShaker m_handshaker;
+    // HandShakeMode m_handshake_mode{HandShakeMode::AwaitHandShake};
+    // ConnectionResult m_connect_result{};
 public:
     AppPresenter(std::unique_ptr<ITcpClientModel> model, std::unique_ptr<ITcpView> gui);
 

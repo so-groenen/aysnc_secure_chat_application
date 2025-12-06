@@ -22,7 +22,6 @@ void TcpClient::send_message(const QString& msg)
     if(is_connected())
     {
         qDebug() << "Sending:" << msg;
-        // msg.append(m_delim);
         QString message = msg + m_delim;
 
         qint64 bytes_written {m_socket.write(message.toStdString().c_str())};
@@ -124,20 +123,45 @@ bool TcpClient::is_connected() const
 void TcpClient::recieving_msg()
 {
     QByteArray recieved_data {m_socket.readAll()};
-    QString    msg           {recieved_data};
-    m_presenter->handle_msg_reception(msg);
+    QString    messages{recieved_data};
+
+
+    auto inbox = messages.split(m_delim);
+
+    if(inbox.back().isEmpty())
+    {
+        inbox.pop_back();
+    }
+
+
+    for(const auto& msg : std::as_const(inbox))
+    {
+        m_presenter->handle_msg_reception(msg);
+    }
+
+
 }
 
 void TcpClient::is_disconnected()
 {
     qDebug() << "Socket is closed";
+    m_presenter->handle_disconnect_from_host();
 }
 
 void TcpClient::retrieve_error(QAbstractSocket::SocketError socket_error)
 {
     qDebug() << socket_error;
-    if (socket_error == QAbstractSocket::RemoteHostClosedError)
-        m_presenter->handle_disconnect_from_host();
+    // if (socket_error == QAbstractSocket::RemoteHostClosedError)
+
+    //     m_presenter->handle_disconnect_from_host();
+
+    if (socket_error == QAbstractSocket::ConnectionRefusedError)
+    {
+        m_presenter->handle_connect_response(std::unexpected{ConnectionError{"ConnectionRefusedError"}});
+    }
+
+    // ConnectionResult result = std::unexpected{m_socket.errorString()};
+    // m_presenter->handle_connect_response(result);
 }
 
 

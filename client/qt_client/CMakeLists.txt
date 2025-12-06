@@ -44,6 +44,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 
         message_variant.h
         my_text_edit.h my_text_edit.cpp
+        bubble_delegate.h bubble_delegate.cpp
+        line_message_delegate.h line_message_delegate.cpp
+        formatted_message_model.h formatted_message_model.cpp
+        message_delegate_modes.h
+        hand_shaker.h hand_shaker.cpp
     )
 
 target_include_directories(client_prototype PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

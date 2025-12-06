@@ -2,20 +2,23 @@
 #include "./ui_mainwindow.h"
 #include <cassert>
 
-#include "server_settings.h"
-#include "user_name_dialog.h"
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui{new Ui::MainWindow}
 {
     ui->setupUi(this);
-    set_Btn_to_connect();
     ui->SendBtn->setEnabled(m_is_connected);
 
-    dispatch_user_info_dialog();
+    ui->messageListView->setItemDelegate(m_bubble_delegate.get());
+    ui->messageListView->setModel(m_message_model.get());
+    ui->messageListView->setWordWrap(true);
+
+    ui->messageListView->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     QObject::connect(ui->MessageEdit, &MyTextEdit::pressEnterEvent, this, &MainWindow::on_SendBtn_clicked);
 
-    ui->MessagesList->setStyleSheet("QListWidget {padding-bottom: 10px;}");
+    set_Btn_to_connect();
+    dispatch_user_info_dialog();
 }
 
 void MainWindow::set_default_hostname(QStringView host)
@@ -28,25 +31,43 @@ void MainWindow::set_password(QStringView password)
     m_password = QString{password};
 }
 
+void MainWindow::set_delegate(DelegateMode mode)
+{
+    m_delegate_mode = mode;
+    switch (m_delegate_mode)
+    {
+        case DelegateMode::BubbleDelegate:
+            ui->messageListView->setItemDelegate(m_bubble_delegate.get());
+            break;
+        case DelegateMode::LineMessageDelegate:
+            ui->messageListView->setItemDelegate(m_line_msg_delegate.get());
+            break;
+        default:
+            break;
+    }
+}
+
 void MainWindow::handle_connect_response(const ConnectionResult &connect_result)
 {
     if(connect_result)
     {
-        // IF SHOULD CLEAR MESSAGE ON RECONNECT
         if(m_clear_history_on_reconnect)
-            ui->MessagesList->clear();
+            m_message_model->clear_all();
+
+        QString result{"<CONNECTED>"};
+        m_message_model->add_warning(result);
 
         ui->ResultEdit->setText(connect_result.value()); // ip addresse
-        ui->MessagesList->addItem("<CONNECTED>");
         set_Btn_to_disconnect();
     }
     else
     {
-        ui->MessagesList->addItem("<COULD NOT CONNECT>");
+        m_message_model->add_warning(connect_result.error());
+
         ui->ResultEdit->setText(connect_result.error()); // error msg
         set_Btn_to_connect();
     }
-    ui->MessagesList->scrollToBottom();
+    ui->messageListView->scrollToBottom();
     m_is_connected = connect_result.has_value();
     ui->SendBtn->setEnabled(m_is_connected);
 }
@@ -58,15 +79,12 @@ void MainWindow::handle_msg_reception(const MessageVariant &msg)
     if(!m_is_connected)
         return;
 
-    const int last {ui->MessagesList->count()};
-
     if(std::holds_alternative<QString>(msg))
     {
         QString message = std::get<QString>(msg);
 
         qDebug() << "UNKNOWN SENDER: RAW UNPARSED MSG:";
-        ui->MessagesList->addItem("<Unknown>: " + message);
-        ui->MessagesList->item(last)->setForeground(Qt::black);
+        m_message_model->add_unformatted_message(message);
         return;
     }
 
@@ -74,28 +92,20 @@ void MainWindow::handle_msg_reception(const MessageVariant &msg)
     if(message.is_current_user())
     {
         qDebug() << "CURRENT USER OK!";
-
-        QListWidgetItem* message_item = new QListWidgetItem(message.content());
-
-        message_item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        ui->MessagesList->addItem(message_item);
-        // ui->MessagesList->addItem("Me: " + message.content());
     }
     else
     {
         qDebug() << "NOT CURRENT USER";
-        qDebug() << sizeof(message.color());
-        ui->MessagesList->addItem(message.username() + ": " + message.content());
     }
-
-    ui->MessagesList->item(last)->setForeground(message.color());
-    ui->MessagesList->scrollToBottom();
+    m_message_model->add_message(message);
+    ui->messageListView->scrollToBottom();
 }
 
 void MainWindow::handle_disconnect_from_host()
 {
     ui->ResultEdit->setText("Connection lost");
-    ui->MessagesList->addItem("<Connection Lost>");
+    QString result{"<DISCONNECTED>"};
+    m_message_model->add_warning(result);
 
     set_Btn_to_connect();
     m_is_connected = false;
@@ -108,9 +118,8 @@ void MainWindow::handle_msg_send_failure(const MessageSendFailure &failed_msg)
 
     if(failed_msg.has_value())
     {
-        const int last {ui->MessagesList->count()};
-        ui->MessagesList->addItem("! Me: " + failed_msg.value() + "<sending fail>");
-        ui->MessagesList->item(last)->setForeground(Qt::gray);
+        QString warning{"!<Sending fail>"};
+        m_message_model->add_warning(warning);
     }
 }
 
@@ -133,13 +142,13 @@ QColor MainWindow::get_font_color() const
 
 void MainWindow::dispatch_user_info_dialog()
 {
-    UsernameDialog user_diaglog{m_username, m_my_color, m_clear_history_on_reconnect};
+    UsernameDialog user_diaglog{m_username, m_my_color, m_delegate_mode};
     user_diaglog.setModal(true);
     if(user_diaglog.exec() ==  QDialog::Accepted)
     {
         m_username                   = user_diaglog.get_username();
         m_my_color                   = user_diaglog.selected_color();
-        m_clear_history_on_reconnect = user_diaglog.should_clear_history_on_reconnect();
+        set_delegate(user_diaglog.get_delegate_mode());
     }
 }
 
@@ -158,8 +167,6 @@ void MainWindow::on_connectBtn_clicked()
     else
     {
         m_presenter->disconnect();
-        ui->MessagesList->addItem("<DISCONNECTED>");
-        ui->MessagesList->scrollToBottom();
 
         ui->ResultEdit->setText("");
         m_is_connected = false;

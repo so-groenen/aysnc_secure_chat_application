@@ -11,7 +11,7 @@
 #include <ranges>
 
 AppPresenter::AppPresenter(std::unique_ptr<ITcpClientModel> model, std::unique_ptr<ITcpView> gui)
-    : m_model{std::move(model)}, m_view{std::move(gui)}
+    : m_model{std::move(model)}, m_view{std::move(gui)}, m_handshaker{m_model.get(), m_view.get()}
 {
     m_view->attach(this);
     m_model->attach(this);
@@ -39,7 +39,7 @@ void AppPresenter::disconnect()
 {
     m_model->disconnect();
     m_message_handler.reset();
-    m_handshake_mode = HandShakeMode::AwaitHandShake;
+    m_handshaker.reset();
 }
 
 void AppPresenter::set_up_connection(const QString& hostname)
@@ -49,61 +49,28 @@ void AppPresenter::set_up_connection(const QString& hostname)
 
 void AppPresenter::handle_connect_response(const ConnectionResult &connect_result)
 {
-    m_view->handle_connect_response(connect_result);
-
+    qDebug() <<  "AppPresenter::handle_connect_response";
     if(!connect_result)
-        return;
-
-    if(m_handshake_mode == HandShakeMode::AwaitHandShake)
     {
-        auto password = m_view->get_password();
-        m_model->send_message(password);
-
-        m_handshake_mode = HandShakeMode::AwaitSessionId;
+        m_view->handle_connect_response(connect_result);
+        return;
     }
+
+    m_handshaker.await_handshake(connect_result);
 }
 
 
 void AppPresenter::handle_msg_reception(const MessageVariant &msg)
 {
     assert(std::holds_alternative<QString>(msg) && "msg is of QString type");
-    QString messages = std::get<QString>(msg);
+    QString message = std::get<QString>(msg);
 
-    auto inbox = messages.split(m_model->get_delimiter());
-    // qDebug() << "messages: " << messages;
-    // qDebug() << "Split:";
-    // for(const auto& ms : std::as_const(inbox))
-    // {
-    //     qDebug() << ms;
-    // }
-
-    if(inbox.back().isEmpty())
+    if(m_handshaker.is_awaiting_session_id() && m_handshaker.parse_session_id(message) == HandShaker::Result::Success)
     {
-        inbox.pop_back();
+        m_message_handler = m_handshaker.make_message_handler();
+        return;
     }
 
-    if(m_handshake_mode == HandShakeMode::AwaitSessionId)
-    {
-        auto first_msg    = inbox.at(0);
-
-        qDebug() << "AWAITING SESSION ID:" << first_msg;
-        bool ok           = false;
-        qint64 session_id = first_msg.toLongLong(&ok);
-
-        if(!ok)
-        {
-            qDebug() << "COULD NOT PARSE SESSION ID! USING RNG TO GENERATE";
-            QRandomGenerator generator = QRandomGenerator{};
-            session_id = generator.bounded(0, std::numeric_limits<qint64>::max());
-        }
-        else
-        {
-            qDebug() << "GOT SESSION_ID: " << session_id;
-        }
-        inbox.pop_front();
-        m_message_handler = std::make_unique<MessageHandler>(m_view->get_username(), m_view->get_font_color(), session_id);
-        m_handshake_mode  = HandShakeMode::Ok;
-    }
 
     if(!m_message_handler)
     {
@@ -111,24 +78,24 @@ void AppPresenter::handle_msg_reception(const MessageVariant &msg)
         return;
     }
 
-    for(const auto& messages : std::as_const(inbox))
+
+    qDebug() << "handle_msg_reception: " << message;
+    auto parsed_msg_res = m_message_handler->parse_to_receive(message);
+    if(!parsed_msg_res)
     {
-        qDebug() << "handle_msg_reception: " << messages;
-        auto parsed_msg_res = m_message_handler->parse_to_receive(messages);
-        if(!parsed_msg_res)
-        {
-            m_view->handle_msg_reception(parsed_msg_res.error()); //pass QString msg if parsing Json fails;
-            continue;
-        }
-        m_view->handle_msg_reception(parsed_msg_res.value()); //pass Message
+        m_view->handle_msg_reception(parsed_msg_res.error());
+        return;
     }
+    m_view->handle_msg_reception(parsed_msg_res.value());
 }
 
 void AppPresenter::handle_disconnect_from_host()
 {
-    m_view->handle_disconnect_from_host();
+    if(m_handshaker.has_session_id())
+        m_view->handle_disconnect_from_host();
+
     m_message_handler.reset();
-    m_handshake_mode = HandShakeMode::AwaitHandShake;
+    m_handshaker.reset();
 }
 
 void AppPresenter::handle_msg_send_failure(const MessageSendFailure &failed_msg)

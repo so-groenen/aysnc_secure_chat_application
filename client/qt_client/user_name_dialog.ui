@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>465</width>
     <height>143</height>
    </rect>
   </property>
@@ -14,6 +14,16 @@
    <string>ChatApp</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="4" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
@@ -41,24 +51,36 @@
        </item>
       </layout>
      </item>
+    </layout>
+   </item>
+   <item row="1" column="0">
+    <layout class="QVBoxLayout" name="verticalLayout_3">
      <item>
-      <widget class="QCheckBox" name="HistoryCheckBox">
+      <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Clear History On Reconnect (Message history will be loaded from server)</string>
+        <string>Message Display Mode:</string>
        </property>
       </widget>
      </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QRadioButton" name="bubbleRadio">
+         <property name="text">
+          <string>Bubbles</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="lineRadio">
+         <property name="text">
+          <string>Lines (old school)</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
     </layout>
-   </item>
-   <item row="4" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
-     </property>
-    </widget>
    </item>
   </layout>
  </widget>
