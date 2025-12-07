@@ -6,7 +6,7 @@
 
 class FormattedMessage
 {
-    int m_is_current_user{};
+    int m_is_current_user{}; // should be an enum: "User, Other, Server or Warning"
     QString m_username{""};
     QString m_content{""};
     QColor m_color{};

@@ -2,7 +2,8 @@
 
 FormattedMessageListModel::FormattedMessageListModel(QObject *parent)
     : QAbstractListModel{parent}
-{}
+{
+}
 
 
 int FormattedMessageListModel::rowCount(const QModelIndex &parent) const
@@ -13,7 +14,7 @@ int FormattedMessageListModel::rowCount(const QModelIndex &parent) const
 QVariant FormattedMessageListModel::data(const QModelIndex &index, int role) const
 {
     if(role != Qt::DisplayRole)
-        return QVariant{QString("A Message")};
+        return QVariant{m_messages.at(index.row()).username()};
 
     FormattedMessage msg = m_messages.at(index.row());
     QVariant var;

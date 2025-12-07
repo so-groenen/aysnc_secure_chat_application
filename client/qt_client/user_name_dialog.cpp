@@ -2,8 +2,10 @@
 #include "ui_user_name_dialog.h"
 
 UsernameDialog::UsernameDialog(QString username, QColor color, DelegateMode delegate_mode, QWidget *parent)
-    : QDialog(parent), m_selected_color{color}, m_delegate_mode{delegate_mode},
-     ui(new Ui::UsernameDialog)
+    : QDialog(parent),
+    m_managed_ui{std::make_unique<Ui::UsernameDialog>()},
+    m_selected_color{color}, m_delegate_mode{delegate_mode},
+    ui(m_managed_ui.get())
 {
     ui->setupUi(this);
     ui->userEdit->setText(username);
@@ -23,7 +25,6 @@ UsernameDialog::UsernameDialog(QString username, QColor color, DelegateMode dele
 
 UsernameDialog::~UsernameDialog()
 {
-    delete ui;
 }
 
 QString UsernameDialog::get_username() const

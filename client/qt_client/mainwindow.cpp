@@ -5,11 +5,13 @@
 
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui{new Ui::MainWindow}
+    : QMainWindow(parent),
+    m_managed_ui{std::make_unique<Ui::MainWindow>()},
+    ui{m_managed_ui.get()}
 {
     ui->setupUi(this);
     ui->SendBtn->setEnabled(m_is_connected);
-
+    ui->username->setText(m_username);
     ui->messageListView->setItemDelegate(m_bubble_delegate.get());
     ui->messageListView->setModel(m_message_model.get());
     ui->messageListView->setWordWrap(true);
@@ -136,19 +138,23 @@ const QString &MainWindow::get_username() const
 
 QColor MainWindow::get_font_color() const
 {
-    return m_my_color;
+    return m_font_color;
 }
 
 
 void MainWindow::dispatch_user_info_dialog()
 {
-    UsernameDialog user_diaglog{m_username, m_my_color, m_delegate_mode};
+    UsernameDialog user_diaglog{m_username, m_font_color, m_delegate_mode};
     user_diaglog.setModal(true);
     if(user_diaglog.exec() ==  QDialog::Accepted)
     {
-        m_username                   = user_diaglog.get_username();
-        m_my_color                   = user_diaglog.selected_color();
-        set_delegate(user_diaglog.get_delegate_mode());
+        m_username         = user_diaglog.get_username();
+        m_font_color       = user_diaglog.selected_color();
+        auto delegate_mode = user_diaglog.get_delegate_mode();
+
+        ui->username->setText(m_username);
+        ui->username->setColor(m_font_color);
+        set_delegate(delegate_mode);
     }
 }
 
@@ -197,10 +203,7 @@ void MainWindow::set_Btn_to_disconnect()
 
 MainWindow::~MainWindow()
 {
-    delete ui;
 }
-
-
 
 
 void MainWindow::on_actionEdit_Server_triggered()

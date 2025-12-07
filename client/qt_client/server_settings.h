@@ -29,7 +29,7 @@ public:
     QString host() const;
 
 private:
-    //std::unique_ptr<Ui::ServerSettings> ui;
+    std::unique_ptr<Ui::ServerSettings> m_managed_ui{};
     Ui::ServerSettings* ui;
     std::unique_ptr<QValidator> m_port_validator{std::make_unique<QIntValidator>(MIN_PORT, MAX_PORT)};
 };

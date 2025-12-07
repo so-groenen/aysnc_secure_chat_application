@@ -3,7 +3,6 @@
 HandShaker::HandShaker(ITcpClientModel *tcp_model, ITcpView *tcp_view)
     : m_model{tcp_model}, m_view{tcp_view}
 {
-
 }
 
 HandShaker::Result HandShaker::parse_session_id(const QString &message)
@@ -15,7 +14,7 @@ HandShaker::Result HandShaker::parse_session_id(const QString &message)
     if(!ok)
     {
         qDebug() << "Connection rejected";
-        ConnectionResult result = std::unexpected{ConnectionError{"SERVER REJECTED CONNECTION: WRONG PASSWORD"}};
+        ConnectionResult result = std::unexpected{ConnectionError{"ConnectionRejected: Wrong Password"}};
         m_view->handle_connect_response(result);
         return HandShaker::Result::Fail;
     }
@@ -27,7 +26,7 @@ HandShaker::Result HandShaker::parse_session_id(const QString &message)
 void HandShaker::await_handshake(const ConnectionResult& connection_result)
 {
     m_connection_result = connection_result;
-    auto password = m_view->get_password();
+    auto password       = m_view->get_password();
     m_model->send_message(password);
     m_handshake_mode = HandShakeMode::AwaitSessionId;
 }

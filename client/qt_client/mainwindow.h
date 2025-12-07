@@ -27,7 +27,9 @@ class MainWindow : public QMainWindow, public ITcpView
     Q_OBJECT
 
 private:
+    std::unique_ptr<Ui::MainWindow> m_managed_ui{};
     Ui::MainWindow* ui;
+
     ITcpClient* m_presenter{};
     bool m_is_connected{false};
     QString m_username{"Your name"};
@@ -38,7 +40,7 @@ private:
     void set_Btn_to_connect();
     void set_Btn_to_disconnect();
     void dispatch_user_info_dialog();
-    QColor m_my_color{255, 182, 193};
+    QColor m_font_color{255, 182, 193};
     bool m_clear_history_on_reconnect{true};
     DelegateMode m_delegate_mode{DelegateMode::BubbleDelegate};
     std::unique_ptr<FormattedMessageListModel>  m_message_model{std::make_unique<FormattedMessageListModel>()};

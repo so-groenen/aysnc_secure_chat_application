@@ -49,6 +49,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         formatted_message_model.h formatted_message_model.cpp
         message_delegate_modes.h
         hand_shaker.h hand_shaker.cpp
+        colored_label.h colored_label.cpp
     )
 
 target_include_directories(client_prototype PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

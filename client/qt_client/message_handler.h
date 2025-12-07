@@ -17,6 +17,9 @@ public:
     explicit MessageHandler(const QString& username, QColor color, qint64 session_id);
     QString parse_to_send(const QString& msg) const;
     auto parse_to_receive(const QString& msg) const -> std::expected<FormattedMessage, QString>;
+    void set_font_color(QColor color);
+    QColor get_font_color() const;
+
     ~MessageHandler();
 };
 

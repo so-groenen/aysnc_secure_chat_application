@@ -99,7 +99,7 @@ void TcpClient::connecting_to_host()
     else
     {
         qDebug() << "Socket opening failure";
-        m_presenter->handle_connect_response(std::unexpected(m_socket.errorString()));
+        // m_presenter->handle_connect_response(std::unexpected(m_socket.errorString()));
     }
 }
 
@@ -145,17 +145,17 @@ void TcpClient::recieving_msg()
 void TcpClient::is_disconnected()
 {
     qDebug() << "Socket is closed";
-    m_presenter->handle_disconnect_from_host();
+    // m_presenter->handle_disconnect_from_host();
 }
 
 void TcpClient::retrieve_error(QAbstractSocket::SocketError socket_error)
 {
-    qDebug() << socket_error;
-    // if (socket_error == QAbstractSocket::RemoteHostClosedError)
-
-    //     m_presenter->handle_disconnect_from_host();
-
-    if (socket_error == QAbstractSocket::ConnectionRefusedError)
+    qDebug() << "TcpClient::retrieve_error" << socket_error;
+    if (socket_error == QAbstractSocket::RemoteHostClosedError)
+    {
+        m_presenter->handle_disconnect_from_host();
+    }
+    else if (socket_error == QAbstractSocket::ConnectionRefusedError)
     {
         m_presenter->handle_connect_response(std::unexpected{ConnectionError{"ConnectionRefusedError"}});
     }

@@ -5,6 +5,7 @@
 #include <QString>
 #include <QColorDialog>
 #include "message_delegate_modes.h"
+#include <memory>
 
 namespace Ui {
 class UsernameDialog;
@@ -28,7 +29,8 @@ private slots:
     void on_lineRadio_toggled(bool checked);
 
 private:
-    Ui::UsernameDialog *ui;
+    std::unique_ptr<Ui::UsernameDialog> m_managed_ui{}; // No New & delete!
+    Ui::UsernameDialog *ui; // ... but we need to keep this guy for the IDE to find the class
     QColor m_selected_color{};
     DelegateMode m_delegate_mode{};
 };

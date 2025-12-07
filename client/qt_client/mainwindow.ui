@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_8">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,2,1,1,2,1">
       <item>
        <widget class="QLabel" name="label">
         <property name="font">
@@ -49,13 +49,41 @@
        </widget>
       </item>
       <item>
-       <spacer name="horizontalSpacer_2">
+       <widget class="QLabel" name="label_4">
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Username:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="ColoredLabel" name="username">
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>username</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Orientation::Horizontal</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>113</width>
+          <width>40</width>
           <height>20</height>
          </size>
         </property>
@@ -176,6 +204,11 @@
    <class>MyTextEdit</class>
    <extends>QTextEdit</extends>
    <header>my_text_edit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ColoredLabel</class>
+   <extends>QLabel</extends>
+   <header>colored_label.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

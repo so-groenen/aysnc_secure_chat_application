@@ -17,14 +17,14 @@ void LineMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
 
     auto formatted_msg = qvariant_cast<FormattedMessage>(msg_data);
 
-    const QString& text = formatted_msg.content();
-    QColor color        = formatted_msg.color();
-    bool is_user        = formatted_msg.is_current_user();
+    const QString& user    = formatted_msg.username();
+    const QString& content = formatted_msg.content();
+    QColor color           = formatted_msg.color();
+    bool is_user           = formatted_msg.is_current_user();
 
+    QString text   = is_user? std::move(content) : user + ": " + content;
     auto text_rect = is_user? option.rect.marginsRemoved(TEXT_PADDING_RIGHT) : option.rect.marginsRemoved(TEXT_PADDING_LEFT) ;
     int alignement = is_user? Qt::AlignRight                                 : Qt::AlignLeft;
-
-
 
     painter->setPen(color);
     painter->drawText(text_rect, alignement | Qt::TextWrapAnywhere, text);
@@ -37,10 +37,12 @@ QSize LineMessageDelegate::sizeHint(const QStyleOptionViewItem &option, const QM
 
     auto formatted_msg = qvariant_cast<FormattedMessage>(msg_data);
 
-    const QString& text = formatted_msg.content();
-    bool is_user        = formatted_msg.is_current_user();
+    const QString& user    = formatted_msg.username();
+    const QString& content = formatted_msg.content();
+    bool is_user           = formatted_msg.is_current_user();
 
-    QMargins text_padding = is_user? TEXT_PADDING_RIGHT : TEXT_PADDING_LEFT;
+    QString text           = is_user? std::move(content) : user + ": " + content;
+    QMargins text_padding  = is_user? TEXT_PADDING_RIGHT : TEXT_PADDING_LEFT;
 
     auto metrics     = QFontMetricsF(option.font);
     auto text_rect   = option.rect.marginsRemoved(text_padding);

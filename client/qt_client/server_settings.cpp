@@ -5,8 +5,9 @@
 
 
 ServerSettings::ServerSettings(uint16_t port, QString password, QString host, QWidget *parent)
-    : QDialog(parent), ui{new Ui::ServerSettings}
-    //ui(std::make_unique<Ui::ServerSettings>())
+    : QDialog(parent),
+    m_managed_ui{std::make_unique<Ui::ServerSettings>()},
+    ui{m_managed_ui.get()}
 {
     ui->setupUi(this);
     ui->passwordEdit->setText(password);
@@ -19,7 +20,6 @@ ServerSettings::ServerSettings(uint16_t port, QString password, QString host, QW
 
 ServerSettings::~ServerSettings()
 {
-    delete ui;
 }
 
 QString ServerSettings::password() const

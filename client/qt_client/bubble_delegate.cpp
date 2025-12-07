@@ -29,11 +29,13 @@ void BubbleDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option
     auto formatted_msg = qvariant_cast<FormattedMessage>(msg_data);
 
 
-    const QString& text = formatted_msg.content();
-    QColor color        = formatted_msg.color();
-    bool is_user        = formatted_msg.is_current_user();
+    const QString& user    = formatted_msg.username();
+    const QString& content = formatted_msg.content();
+    QColor color           = formatted_msg.color();
+    bool is_user           = formatted_msg.is_current_user();
 
 
+    QString text     = is_user? std::move(content) : user + ":\n" + content;
     auto bubble_rect = is_user? option.rect.marginsRemoved(BUBBLE_PADDING_RIGHT) : option.rect.marginsRemoved(BUBBLE_PADDING_LEFT);
     auto text_rect   = is_user? option.rect.marginsRemoved(TEXT_PADDING_RIGHT)   : option.rect.marginsRemoved(TEXT_PADDING_LEFT) ;
     QPoint p0        = is_user? bubble_rect.topRight() : bubble_rect.topLeft();
@@ -68,13 +70,15 @@ QSize BubbleDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelI
 
     auto formatted_msg = qvariant_cast<FormattedMessage>(msg_data);
 
-    const QString& text = formatted_msg.content();
-    bool is_user        = formatted_msg.is_current_user();
+    const QString& user    = formatted_msg.username();
+    const QString& content = formatted_msg.content();
+    bool is_user           = formatted_msg.is_current_user();
 
+
+    QString text          = is_user? std::move(content) : user + ":\n" + content;
     QMargins text_padding = is_user? TEXT_PADDING_RIGHT : TEXT_PADDING_LEFT;
 
-    // auto metrics     =  QFontMetricsF(qApp->font());
-    // auto metrics     = QApplication::fontMetrics();
+
     auto metrics     = QFontMetricsF(option.font);
     auto text_rect   = option.rect.marginsRemoved(text_padding);
     text_rect        = metrics.boundingRect(text_rect, Qt::TextWrapAnywhere, text).toRect();

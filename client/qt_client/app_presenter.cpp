@@ -31,6 +31,11 @@ void AppPresenter::send_message(const QString& msg)
         return;
     }
 
+    if(m_view->get_font_color() != m_message_handler->get_font_color())
+    {
+        m_message_handler->set_font_color(m_view->get_font_color());
+    }
+
     QString parsed_msg = m_message_handler->parse_to_send(msg);
     m_model->send_message(parsed_msg);
 }
@@ -55,7 +60,6 @@ void AppPresenter::handle_connect_response(const ConnectionResult &connect_resul
         m_view->handle_connect_response(connect_result);
         return;
     }
-
     m_handshaker.await_handshake(connect_result);
 }
 

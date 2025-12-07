@@ -12,13 +12,6 @@
 #include "message_handler.h"
 #include "hand_shaker.h"
 
-// enum class HandShakeMode
-// {
-//     AwaitHandShake,
-//     AwaitSessionId,
-//     Ok
-// };
-
 class AppPresenter : public IPresenter
 {
     std::unique_ptr<ITcpClientModel> m_model{};
