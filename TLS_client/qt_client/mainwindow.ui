@@ -201,7 +201,7 @@
   </action>
   <action name="actionEdit_Certificates">
    <property name="text">
-    <string>Edit Certificates </string>
+    <string>Edit Certificates</string>
    </property>
   </action>
  </widget>

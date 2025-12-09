@@ -20,8 +20,7 @@ void CertificatesDialog::on_PrivateButton_clicked()
     QString f = QFileDialog::getOpenFileName(this);
     qDebug() << f;
     QFileInfo file{f};
-    ui->serverRootLabel->setText(file.fileName());
-
+    ui->privateLabel->setText(file.fileName());
 }
 
 
@@ -30,8 +29,7 @@ void CertificatesDialog::on_CertificateButton_clicked()
     QString f = QFileDialog::getOpenFileName(this);
     qDebug() << f;
     QFileInfo file{f};
-    ui->serverRootLabel->setText(file.fileName());
-
+    ui->publicLabel->setText(file.fileName());
 }
 
 

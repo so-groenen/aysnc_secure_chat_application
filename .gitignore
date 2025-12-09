@@ -13,8 +13,7 @@
 #
 
 TLS_client/qt_client/.qtcreator
-
-server/asio-1.36.0
+TLS_server/asio-1.36.0
 TLS_client/qt_client/build
 # Qt-es
 object_script.*.Release
@@ -39,7 +38,7 @@ Makefile*
 *.prl
 
 # personnal files
-client/qt_client/build
+TLS_client/qt_client/build
 
 # Qt unit tests
 target_wrapper.*
