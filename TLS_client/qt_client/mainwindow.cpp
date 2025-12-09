@@ -233,3 +233,14 @@ void MainWindow::on_actionEdit_Username_triggered()
 
 
 
+
+void MainWindow::on_actionEdit_Certificates_triggered()
+{
+    CertificatesDialog cert_dialog{};
+    cert_dialog.setModal(true);
+    if(cert_dialog.exec() ==  QDialog::Accepted)
+    {
+
+    }
+}
+

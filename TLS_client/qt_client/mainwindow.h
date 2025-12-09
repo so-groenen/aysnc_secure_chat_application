@@ -6,6 +6,7 @@
 #include <memory>
 #include "interface_presenter.h"
 #include "interface_tcp_view.h"
+#include "certificates_dialog.h"
 #include <QTextEdit>
 #include "server_settings.h"
 #include "user_name_dialog.h"
@@ -71,5 +72,6 @@ private slots:
     void on_connectBtn_clicked();
     void on_actionEdit_Server_triggered();
     void on_actionEdit_Username_triggered();
+    void on_actionEdit_Certificates_triggered();
 };
 #endif // MAINWINDOW_H

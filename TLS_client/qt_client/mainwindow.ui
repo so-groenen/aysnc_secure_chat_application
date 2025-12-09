@@ -184,6 +184,7 @@
     <addaction name="separator"/>
     <addaction name="actionEdit_Server"/>
     <addaction name="actionEdit_Username"/>
+    <addaction name="actionEdit_Certificates"/>
    </widget>
    <addaction name="menuedit"/>
   </widget>
@@ -196,6 +197,11 @@
   <action name="actionEdit_Username">
    <property name="text">
     <string>Edit user settings</string>
+   </property>
+  </action>
+  <action name="actionEdit_Certificates">
+   <property name="text">
+    <string>Edit Certificates </string>
    </property>
   </action>
  </widget>
