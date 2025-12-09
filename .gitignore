@@ -11,8 +11,11 @@
 *.dylib
 .VSCodeCounter
 #
-server/asio-1.36.0
 
+TLS_client/qt_client/.qtcreator
+
+server/asio-1.36.0
+TLS_client/qt_client/build
 # Qt-es
 object_script.*.Release
 object_script.*.Debug
