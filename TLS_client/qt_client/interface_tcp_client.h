@@ -4,6 +4,7 @@
 #include <QString>
 #include <iostream>
 
+
 // When an event occurs in Qt widget, we forward it to the presenter...
 // the presenter needs the TCP client to expose the following methods:
 

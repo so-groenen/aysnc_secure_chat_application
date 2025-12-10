@@ -2,8 +2,8 @@
 #define APP_PRESENTER_H
 
 #include "interface_tcp_view.h"
-#include "interface_presenter.h"
-#include "interface_tcp_model.h"
+#include "interface_ssl_presenter.h"
+#include "interface_ssl_client_model.h"
 #include <memory>
 #include <iostream>
 #include <QString>
@@ -12,22 +12,27 @@
 #include "message_handler.h"
 #include "hand_shaker.h"
 
-class AppPresenter : public IPresenter
+class AppPresenter : public ISslPresenter
 {
-    std::unique_ptr<ITcpClientModel> m_model{};
-    std::unique_ptr<ITcpView> m_view{};
+    std::unique_ptr<ISslClientModel> m_model{};
+    std::unique_ptr<ISslView> m_view{};
     std::unique_ptr<MessageHandler> m_message_handler{};
     HandShaker m_handshaker;
     // HandShakeMode m_handshake_mode{HandShakeMode::AwaitHandShake};
     // ConnectionResult m_connect_result{};
 public:
-    AppPresenter(std::unique_ptr<ITcpClientModel> model, std::unique_ptr<ITcpView> gui);
+    AppPresenter(std::unique_ptr<ISslClientModel> model, std::unique_ptr<ISslView> gui);
 
     // interface we expose to the gui:
     void set_port(uint16_t port) override;
     void send_message(const QString& msg) override;
     void disconnect() override;
     void set_up_connection(const QString& hostname) override;
+
+    // Expose SSL methods to the GUI:
+    void set_private_key(const QSslKey& private_key) override;
+    void set_public_key(const QSslCertificate& public_key) override;
+    void set_root_CA(const QSslCertificate& rootCA) override;
 
     // interface we expose to the TCP client:
     void handle_connect_response(const ConnectionResult& connect_result) override;

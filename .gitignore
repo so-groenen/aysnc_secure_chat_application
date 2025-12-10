@@ -39,6 +39,7 @@ Makefile*
 
 # personnal files
 TLS_client/qt_client/build
+client 
 
 # Qt unit tests
 target_wrapper.*

@@ -158,7 +158,7 @@ void MainWindow::dispatch_user_info_dialog()
     }
 }
 
-void MainWindow::attach(ITcpClient *presenter)
+void MainWindow::attach(ISslClient *presenter)
 {
     m_presenter = presenter;
 }
@@ -236,10 +236,20 @@ void MainWindow::on_actionEdit_Username_triggered()
 
 void MainWindow::on_actionEdit_Certificates_triggered()
 {
-    CertificatesDialog cert_diaglog{};
+    CertificatesDialog cert_diaglog{std::move(m_keys_and_certificates)};
     cert_diaglog.setModal(true);
     if(cert_diaglog.exec() ==  QDialog::Accepted)
     {
+        m_keys_and_certificates = std::move(cert_diaglog.get_security_bundle());
+
+        // m_keys_and_certificates.private_key = cert_diaglog.get_private_key();
+        // m_keys_and_certificates.public_key  = cert_diaglog.get_public_key();
+        // m_keys_and_certificates.root_CA     = cert_diaglog.get_root_CA();
+
+        m_presenter->set_private_key(m_keys_and_certificates.private_key);
+        m_presenter->set_public_key(m_keys_and_certificates.public_key);
+        m_presenter->set_root_CA(m_keys_and_certificates.root_CA);
+
     }
 }
 

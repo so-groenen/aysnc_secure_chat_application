@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include "tcp_client.h"
+#include "ssl_client_model.h"
 #include "app_presenter.h"
 #include <QObject>
 #include <QApplication>
@@ -13,8 +13,8 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    std::unique_ptr<ITcpClientModel> tcp_client = std::make_unique<TcpClient>(PORT);
-    std::unique_ptr<ITcpView> tcp_view          = std::make_unique<MainWindow>();
+    std::unique_ptr<ISslClientModel> tcp_client = std::make_unique<SslClientModel>(PORT);
+    std::unique_ptr<ISslView> tcp_view          = std::make_unique<MainWindow>();
     tcp_view->set_default_hostname(DEFAULT_HOSTNAME);
     tcp_view->set_password(PASSWORD);
 

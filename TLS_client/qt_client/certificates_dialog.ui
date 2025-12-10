@@ -21,14 +21,14 @@
        <item>
         <widget class="QLabel" name="privateLabel">
          <property name="text">
-          <string>&lt;PrivateKey&gt;</string>
+          <string>&lt;client.key NOT SET&gt;</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="PrivateButton">
          <property name="text">
-          <string>Private Key</string>
+          <string>Private key</string>
          </property>
         </widget>
        </item>
@@ -39,14 +39,14 @@
        <item>
         <widget class="QLabel" name="publicLabel">
          <property name="text">
-          <string>&lt;PublicKey&gt;</string>
+          <string>&lt;client.crt NOT SET&gt;</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="CertificateButton">
          <property name="text">
-          <string>Public Key</string>
+          <string>Public key</string>
          </property>
         </widget>
        </item>
@@ -57,7 +57,7 @@
        <item>
         <widget class="QLabel" name="serverRootLabel">
          <property name="text">
-          <string>&lt;Server RootCA&gt;</string>
+          <string>&lt;ServerRootCA.crt NOT SET&gt;</string>
          </property>
         </widget>
        </item>

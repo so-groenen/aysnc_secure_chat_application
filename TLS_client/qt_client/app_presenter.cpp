@@ -10,7 +10,7 @@
 #include <cassert>
 #include <ranges>
 
-AppPresenter::AppPresenter(std::unique_ptr<ITcpClientModel> model, std::unique_ptr<ITcpView> gui)
+AppPresenter::AppPresenter(std::unique_ptr<ISslClientModel> model, std::unique_ptr<ISslView> gui)
     : m_model{std::move(model)}, m_view{std::move(gui)}, m_handshaker{m_model.get(), m_view.get()}
 {
     m_view->attach(this);
@@ -50,6 +50,24 @@ void AppPresenter::disconnect()
 void AppPresenter::set_up_connection(const QString& hostname)
 {
     m_model->set_up_connection(hostname);
+}
+
+void AppPresenter::set_private_key(const QSslKey &private_key)
+{
+    qDebug() << "Presenter: private key is OK: " << !private_key.isNull();
+    m_model->set_private_key(private_key);
+}
+
+void AppPresenter::set_public_key(const QSslCertificate &public_key)
+{
+    qDebug() << "Presenter: public key is OK: " << !public_key.isNull();
+    m_model->set_public_key(public_key);
+}
+
+void AppPresenter::set_root_CA(const QSslCertificate &rootCA)
+{
+    qDebug() << "Presenter: rootCA is OK: " << !rootCA.isNull();
+    m_model->set_root_CA(rootCA);
 }
 
 void AppPresenter::handle_connect_response(const ConnectionResult &connect_result)
