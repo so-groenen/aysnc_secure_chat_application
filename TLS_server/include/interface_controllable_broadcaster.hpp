@@ -11,6 +11,5 @@ public:
     virtual ~IControllableBroadcaster() {}
     virtual std::string_view ip() const = 0;
     virtual awaitable<size_t> async_read_password(std::string& buff, size_t pass_buff_len, std::string_view delim) = 0;
-    // virtual awaitable<size_t> async_respond(std::string buff, size_t pass_buff_len, std::string_view delim) = 0;
 };
 #endif

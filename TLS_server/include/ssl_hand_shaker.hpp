@@ -1,20 +1,28 @@
-#ifndef HAND_SHAKER_HPP
-#define HAND_SHAKER_HPP
+#ifndef SSL_HAND_SHAKER_HPP
+#define SSL_HAND_SHAKER_HPP
 
 #include <iostream>
 #include <print>
+#include <random>
+#include <format>
+
 #include "asio/steady_timer.hpp"
 #include "asio/use_awaitable.hpp"
 #include "asio/experimental/awaitable_operators.hpp"
-#include <random>
-#include <format>
-#include "interface_controllable_broadcaster.hpp"
+#include "interface_ssl_broadcaster.hpp"
 #include "interface_private_broadcaster.hpp"
 
 using namespace std::string_view_literals;
 using namespace asio::experimental::awaitable_operators; // to be able to write "co_await (coro1() && coro2())""
 
-class HandShaker
+// class ISslHandshaker 
+// {
+// public:
+//     ~ISslHandshaker() = default;
+//     virtual void attach(ISslBroadcaster* participant) = 0; // controllable (password protected) + SSL layer + broadcaster (exposes async read/write)
+// };
+
+class SslHandShaker
 {
     std::string_view m_pass_delim {"\r\n"sv};
     size_t m_pass_buff_len{1024};
@@ -23,18 +31,19 @@ class HandShaker
     std::string_view m_timeout_resp{"[timeout]"sv};
 
     std::shared_ptr<IPrivateBroadcaster> m_private_room{};
-    IControllableBroadcaster* m_participant{}; 
+    ISslBroadcaster* m_participant{}; 
     size_t m_timeout_secs{5};
     size_t m_write_response_await_ms{250};
     bool m_should_accept{};
     bool m_is_terminating{};
 public:
-    explicit HandShaker(std::shared_ptr<IPrivateBroadcaster> room, IControllableBroadcaster* participant)
+    explicit SslHandShaker(std::shared_ptr<IPrivateBroadcaster> room, ISslBroadcaster* participant)
         : m_private_room{room}, m_participant{participant} 
     {
-        auto device   = std::random_device{};
+        auto device  = std::random_device{};
         m_session_id = std::format("{}", device());
     } 
+ 
 
 private:
     void log_error(std::string_view from, const std::exception& e) const 
@@ -85,6 +94,15 @@ private:
     {
         return !m_should_accept;
     }
+    awaitable<void> perform_ssl_handshake( )
+    {
+        std::println("Starting SSL handshake");
+
+        co_await m_participant->async_perform_ssl_handshake();
+
+        std::println("Finished SSL handshake");
+    }
+
     awaitable<void> perform_password_handshake(asio::steady_timer& timer)
     {
         co_await client_first_response();
@@ -164,7 +182,7 @@ private:
         {
             if (e.code() == asio::error::operation_aborted) 
             {
-                // log_error("time_out.cancel"sv, e);
+                log_error("time_out.cancel"sv, e);
             }
             else if (e.code() == asio::error::connection_refused) 
             {
@@ -187,74 +205,14 @@ private:
         }
     }    
 public:
-    awaitable<bool> try_handshake()
-    {
-        asio::steady_timer timer{co_await asio::this_coro::executor, std::chrono::seconds(m_timeout_secs)};
-        try
-        {
-            co_await (perform_password_handshake(timer) && countdown_timer(timer));  
-        }
-        catch (const asio::system_error& e) 
-        {
-            if (e.code() == asio::error::operation_aborted) 
-            {
-                log_error("try_hand_shake/operation_aborted"sv, e);
-            }
-            else if (e.code() == asio::error::connection_refused) 
-            {
-                log_error("try_hand_shake/connection_refused"sv, e);
-            }
-            else if (e.code() == asio::error::timed_out) 
-            {
-                log_error("try_hand_shake/timed_out"sv, e);
-            }
-            else
-            {
-                log_error("try_hand_shake/other", e);
-            }
-            co_return false;
-        }
-        co_return true;
-    }
-    // template<typename AcceptanceToken, typename RejectionToken>
-    // awaitable<void> try_connect(AcceptanceToken&& accept_callback, RejectionToken&& reject_callback)
-    //     requires std::invocable<AcceptanceToken> && std::invocable<RejectionToken>
-    // {
-    //     asio::steady_timer timer{co_await asio::this_coro::executor, std::chrono::seconds(m_timeout_secs)};
-    //     try
-    //     {
-    //         co_await (perform_handshake(timer) && countdown_timer(timer));  
-    //     }
-    //     catch (const asio::system_error& e) 
-    //     {
-    //         if (e.code() == asio::error::operation_aborted) 
-    //         {
-    //             log_error("try_connect/operation_aborted"sv, e);
-    //         }
-    //         else if (e.code() == asio::error::connection_refused) 
-    //         {
-    //             log_error("try_connect/connection_refused"sv, e);
-    //         }
-    //         else if (e.code() == asio::error::timed_out) 
-    //         {
-    //             log_error("try_connect/timed_out"sv, e);
-    //         }
-    //         else
-    //         {
-    //             log_error("try_connect/other", e);
-    //         }
-    //         reject_callback();
-    //         co_return;
-    //     }
-    //     accept_callback();
-    //     co_return;
-    // }
+  
     template<typename CompletionToken>
     awaitable<void> try_connect(CompletionToken&& completion_token) requires std::invocable<CompletionToken,bool>
     {
         asio::steady_timer timer{co_await asio::this_coro::executor, std::chrono::seconds(m_timeout_secs)};
         try
         {
+            co_await perform_ssl_handshake();
             co_await (perform_password_handshake(timer) && countdown_timer(timer));  
         }
         catch (const asio::system_error& e) 

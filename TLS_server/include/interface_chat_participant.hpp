@@ -11,6 +11,8 @@ public:
 };
 typedef std::unique_ptr<IChatParticipant> IChatParticipant_ptr;
 
+
+
 namespace chat_participant
 {
     namespace details 

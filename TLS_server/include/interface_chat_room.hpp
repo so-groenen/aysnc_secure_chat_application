@@ -8,7 +8,7 @@
 class IChatRoom : public IPublicBroadcaster, public IPrivateBroadcaster
 {
 public:
-    virtual ~IChatRoom() {}
+    virtual ~IChatRoom() = default;
     virtual void join(IChatParticipant_ptr participant) = 0;
     virtual void join_public(IChatParticipant* participant) = 0;
     // virtual void deliver_private(const std::string& msg, IChatParticipant* participant) = 0;
