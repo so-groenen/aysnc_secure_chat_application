@@ -246,6 +246,7 @@ void MainWindow::on_actionEdit_Certificates_triggered()
         // m_keys_and_certificates.public_key  = cert_diaglog.get_public_key();
         // m_keys_and_certificates.root_CA     = cert_diaglog.get_root_CA();
 
+        //m_ssl_interface
         m_presenter->set_private_key(m_keys_and_certificates.private_key);
         m_presenter->set_public_key(m_keys_and_certificates.public_key);
         m_presenter->set_root_CA(m_keys_and_certificates.root_CA);

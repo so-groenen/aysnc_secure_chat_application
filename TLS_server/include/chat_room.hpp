@@ -19,7 +19,7 @@ public:
     void join(IChatParticipant_ptr participant) override;
     void leave(IChatParticipant* participant) override ;
     void join_public(IChatParticipant* participant) override;
-    void deliver_private(const std::string& msg, IPublicBroadcaster* participant) override;
+    void deliver_private(const std::string& msg, IControllableBroadcaster* participant) override;
     void deliver(const std::string& msg) override;
 };
 

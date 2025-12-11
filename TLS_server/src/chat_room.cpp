@@ -13,12 +13,13 @@ void ChatRoom::join(IChatParticipant_ptr participant)
 {
     std::println("New connection!");
 //unsafe
-//{
-    auto raw_participant = participant.get();        
-    m_participants.insert(std::move(participant)); // we want to start the session AFTER they have joined
-    raw_participant->start();
+//{                                                // we want to start the session AFTER they have joined
+    auto raw_participant = participant.get();      // extract raw pointer from unique pointer
+    m_participants.insert(std::move(participant)); // now the m_participants unique_ptr set owns the memory (is responsable for cleaning it)
+    raw_participant->start();                      // use the raw pointer to start the session AFTER we joined it, so that we can deliver all messages
 //}
 }
+
 void ChatRoom::leave(IChatParticipant* participant) 
 {
     auto it = m_participants.find(participant);
@@ -29,6 +30,7 @@ void ChatRoom::leave(IChatParticipant* participant)
 }
 void ChatRoom::join_public(IChatParticipant* participant)
 {
+
     auto it = m_participants.find(participant);
     if (it != m_participants.end())
     {
@@ -42,9 +44,11 @@ void ChatRoom::join_public(IChatParticipant* participant)
         }
     }
 }
-void ChatRoom::deliver_private(const std::string& msg, IPublicBroadcaster* participant)
+void ChatRoom::deliver_private(const std::string& msg, IControllableBroadcaster* participant)
 {
     auto chat_participant = dynamic_cast<IChatParticipant*>(participant); 
+    assert(participant != nullptr && "IControllableBroadcaster ptr must be a IChatParticipant!");
+
     auto it = m_participants.find(chat_participant);
     if (it != m_participants.end())
     {

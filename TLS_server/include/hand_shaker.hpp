@@ -18,7 +18,7 @@ class HandShaker
 {
     std::string_view m_pass_delim {"\r\n"sv};
     size_t m_pass_buff_len{1024};
-    std::string m_session_id{""}; //gets init in the constructor // SESSION ID
+    std::string m_session_id{""};  
     std::string_view m_reject_resp{"[reject]"sv};
     std::string_view m_timeout_resp{"[timeout]"sv};
 

@@ -32,7 +32,8 @@ private:
     std::unique_ptr<Ui::MainWindow> m_managed_ui{};
     Ui::MainWindow* ui;
 
-    ISslClient* m_presenter{};
+    ISslClient* m_presenter{}; // should be only TcpClient then
+    // ISecureSocketLayer m_ssl_interface{};
     bool m_is_connected{false};
     QString m_username{"Your name"};
     QString m_name{"me"};

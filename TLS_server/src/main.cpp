@@ -1,6 +1,3 @@
-
-// Loosely adapted from chat_server.cpp/time_out tutorial by christopher M. Kohlhoff (chris at kohlhoff dot com)
-//
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -12,14 +9,19 @@
 #include "asio/basic_signal_set.hpp"
 
 #include "chat_room.hpp"
-// #include "tcp_chat_server.hpp"
-#include "ssl_chat_server.hpp"
-#include "ssl_loader.hpp"
+
+#ifdef USE_SSL_SOCKET
+    #include "ssl_chat_server.hpp"
+    #include "ssl_loader.hpp"
+#elif defined(USE_TCP_SOCKET) 
+    #include "tcp_chat_server.hpp"
+#endif
+
  
 
 std::optional<std::string> get_password(const std::string& path)
 {
-    std::ifstream password_file{path, std::ifstream::binary};
+    std::ifstream password_file{path};
     if(!password_file.is_open())
     {
         return std::nullopt;
@@ -37,7 +39,9 @@ int main()
     // Port 
     unsigned short port{6970};
 
+    abstract_chat_session::log_socket_type();
 
+#ifdef USE_SSL_SOCKET
     /// Setup SSL certificates ////
     fs::path certificate_dir       {"certificates"};
     std::string_view root_CA_subdir{"client_root_CAs"};
@@ -51,7 +55,7 @@ int main()
     }
     asio::ssl::context ssl_context = std::move(ssl_contest_result.value());
     ssl_context.set_verify_mode(asio::ssl::verify_peer);
- 
+#endif
 
     /// Get password ///
     auto password_res = get_password("password.txt");
@@ -60,15 +64,17 @@ int main()
         std::println("Could not get password");
         return EXIT_FAILURE;
     }
-
     std::println("Using password: \"{}\"", password_res.value());
 
     try
     {
         asio::io_context io{};
 
+#ifdef USE_SSL_SOCKET
         SslChatServer chat_server{io, port, std::move(ssl_context)};
-
+#else 
+        TcpChatServer chat_server{io, port};
+#endif
         auto chat_room = std::make_shared<ChatRoom>(password_res.value());
 
         chat_server.start(chat_room);

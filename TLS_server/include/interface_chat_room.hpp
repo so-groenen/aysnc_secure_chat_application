@@ -11,7 +11,6 @@ public:
     virtual ~IChatRoom() = default;
     virtual void join(IChatParticipant_ptr participant) = 0;
     virtual void join_public(IChatParticipant* participant) = 0;
-    // virtual void deliver_private(const std::string& msg, IChatParticipant* participant) = 0;
     virtual void leave(IChatParticipant* participant) = 0;
 };
 

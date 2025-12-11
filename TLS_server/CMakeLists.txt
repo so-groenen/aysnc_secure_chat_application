@@ -4,12 +4,13 @@ project(async_chat_server VERSION 0.1.0 LANGUAGES C CXX)
 add_executable(async_chat_server src/main.cpp
                                  src/ssl_loader.cpp
                                  src/chat_room.cpp
-                                 src/ssl_chat_session.cpp)
-
+                                 src/abstract_chat_session.cpp)
+ 
 
 target_compile_features    (async_chat_server PRIVATE cxx_std_23)
 target_include_directories (async_chat_server PRIVATE include)
 target_link_libraries      (async_chat_server PRIVATE ssl crypto)
+target_compile_definitions (async_chat_server PRIVATE USE_TCP_SOCKET)
 
 add_custom_command(
     TARGET async_chat_server

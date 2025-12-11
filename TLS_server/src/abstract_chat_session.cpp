@@ -1,26 +1,54 @@
-#include "chat_session.hpp"
+#include "abstract_chat_session.hpp"
 
 
-ChatSession::ChatSession(tcp::socket socket, std::shared_ptr<IChatRoom> room)
+static bool is_open(const TcpSocket& tcp_socket)
+{
+    return tcp_socket.is_open();
+}
+static bool is_open(const SslSocket& ssl_socket)
+{
+    return ssl_socket.lowest_layer().is_open();
+}
+static void close_socket(TcpSocket& tcp_socket)
+{
+    return tcp_socket.close();
+}
+static void close_socket(SslSocket& ssl_socket)
+{
+    return ssl_socket.lowest_layer().close();
+}
+static std::string get_ip(const TcpSocket& tcp_socket)
+{
+    return tcp_socket.remote_endpoint().address().to_string();
+}
+static std::string get_ip(const SslSocket& ssl_socket)
+{
+    return ssl_socket.lowest_layer().remote_endpoint().address().to_string();
+}
+ 
+
+
+
+AbstractChatSession::AbstractChatSession(AbstractSocket socket, std::shared_ptr<IChatRoom> room)
     : m_client_socket(std::move(socket)), 
     m_hand_shaker{std::dynamic_pointer_cast<IPrivateBroadcaster>(room), this}, //dynamic_cast<IControllableBroadcaster*>(this)},
     m_timer(m_client_socket.get_executor()), m_room(room),
-        m_ip{m_client_socket.remote_endpoint().address().to_string()}
+        m_ip{get_ip(m_client_socket)}
 {
     m_timer.expires_at(std::chrono::steady_clock::time_point::max());
 }
-awaitable<size_t> ChatSession::async_read_password(std::string& buff, size_t pass_buff_len, std::string_view delim)
+awaitable<size_t> AbstractChatSession::async_read_password(std::string& buff, size_t pass_buff_len, std::string_view delim)
 {
     size_t n = co_await asio::async_read_until(m_client_socket, asio::dynamic_buffer(buff, pass_buff_len), delim, asio::use_awaitable);
     co_return n;
 }
 
-std::string_view ChatSession::ip() const 
+std::string_view AbstractChatSession::ip() const 
 {
     return std::string_view{m_ip};
 }
 
-void ChatSession::start()
+void AbstractChatSession::start()
 {        
     auto handle_connection_response = [this](bool connection_is_acctepd)
     {
@@ -47,27 +75,27 @@ void ChatSession::start()
     asio::detached);
 
 
-    co_spawn(m_client_socket.get_executor(), [this]
+    asio::co_spawn(m_client_socket.get_executor(), [this]
     {
         return writer();
     },
     asio::detached);
 }
 
-void ChatSession::deliver(const std::string& msg)
+void AbstractChatSession::deliver(const std::string& msg)
 {
     m_write_msgs.push_back(msg);
     m_timer.cancel_one();
 }
 
-awaitable<void> ChatSession::reader()
+awaitable<void> AbstractChatSession::reader()
 {
     //m_room->join_public(this);
 
     std::string read_msg;
     try
     { 
-        while(m_client_socket.is_open())
+        while(is_open(m_client_socket))
         {
             std::size_t n = co_await asio::async_read_until(m_client_socket, asio::dynamic_buffer(read_msg, m_read_buff_len), m_delim, asio::use_awaitable);
             std::string_view response{read_msg};
@@ -86,15 +114,15 @@ awaitable<void> ChatSession::reader()
         stop();
     }
 }
-void ChatSession::log_error(std::string_view from, const std::exception& e) const 
+void AbstractChatSession::log_error(std::string_view from, const std::exception& e) const 
 {
     std::println("[{}(): ip: {}: <Terminated with>: {}]", from, m_ip, e.what());
 }
-awaitable<void> ChatSession::writer()
+awaitable<void> AbstractChatSession::writer()
 {
     try
     {
-        while (m_client_socket.is_open())
+        while(is_open(m_client_socket))
         {
             if (m_write_msgs.empty())
             {
@@ -114,13 +142,13 @@ awaitable<void> ChatSession::writer()
         stop();
     }
 } 
-void ChatSession::stop()
+void AbstractChatSession::stop()
 {
     if (!m_stopped)
     {
         std::println("[from: {}: is stopped]", m_ip);
         m_room->leave(this);
-        m_client_socket.close();
+        close_socket(m_client_socket);
         m_timer.cancel();
         m_stopped = true;
     }
