@@ -6,12 +6,12 @@
 #define EXITING false
 
 // MESSAGES
-std::array<const char*, 5> MSGS = {"Hello world", "How are you", "Who is this", "Nothing here","42"};
+std::array<const char*, 5> MSGS = {"Hello world", "How are you", "Who is this", "Nothing here", "42"};
 size_t CURRENT_MSG_INDEX        = 0;
 
 
 
-// Rust Style C++ definition
+// Using Rust/Python style C++ notation:
 auto None = std::nullopt;
 template<typename T>
 using Option = std::optional<T>;
@@ -94,8 +94,7 @@ public:
 /////           CONCRETE NETWORKS MODELS           /////
 ////////////////////////////////////////////////////////
 
-// Interacting with the Os 
-
+// Interacting with the operating system 
 class TcpClientModel : public AbstractTcpModel
 {
 public:
@@ -183,7 +182,7 @@ enum class ConnectionMode
     SSL,
 };
 
-
+constexpr ConnectionMode DEFAULT_CONNECTION{ConnectionMode::TCP};
 
 class MainWindow : public ITcpView
 {
@@ -201,25 +200,24 @@ public:
     {
         std::println("MainWindow: GOT: \"{}\"", msg);
     }
-
     void handle_connection_mode() 
     {
         switch (m_mode)
         {
             case ConnectionMode::SSL:
-                {
-                    auto ssl_interface = std::make_unique<SslPresenter>();
-                    m_key_handler      = ssl_interface.get();               // Interface segregation: ISecurity
-                    m_presenter        = std::move(ssl_interface);          // Interface segregation: INetwork
-                }
-                break;
+            {
+                auto ssl_interface = std::make_unique<SslPresenter>();
+                m_key_handler      = ssl_interface.get();               // Interface segregation: ISecurity
+                m_presenter        = std::move(ssl_interface);          // Interface segregation: INetwork
+            }
+            break;
             case ConnectionMode::TCP:
-                {
-                    auto tcp_interface = std::make_unique<TcpPresenter>();
-                    m_key_handler      = None;                              // Using Option = None like in Rust
-                    m_presenter        = std::move(tcp_interface);
-                }
-                break;
+            {
+                auto tcp_interface = std::make_unique<TcpPresenter>();
+                m_key_handler      = None;                              // Using Option = None
+                m_presenter        = std::move(tcp_interface);
+            }
+            break;
         }
         m_presenter->attch(this);
     }
@@ -244,10 +242,10 @@ public:
             {
                 std::println("exiting");
                 m_is_running = false;
-                return m_is_running;
+                break;
             }
         }
-        return true;
+        return m_is_running;
     }
     void make_connection()
     {
@@ -271,15 +269,16 @@ public:
             make_connection();
         }
     }
+    ~MainWindow()
+    {
+        std::println("goodbye");
+    }
 };
 
  
 
 int main()
 {
-    MainWindow qt_app{ConnectionMode::TCP};
+    MainWindow qt_app{DEFAULT_CONNECTION};
     qt_app.run();
-
-
-    std::println("goodbye");
 }
