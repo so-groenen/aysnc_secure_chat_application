@@ -1,6 +1,6 @@
 #include "hand_shaker.h"
 
-HandShaker::HandShaker(ISslClientModel *tcp_model, ISslView *tcp_view)
+HandShaker::HandShaker(ITcpClient *tcp_model, ITcpView *tcp_view)
     : m_model{tcp_model}, m_view{tcp_view}
 {
 }

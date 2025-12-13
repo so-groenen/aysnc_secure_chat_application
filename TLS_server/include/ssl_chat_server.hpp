@@ -20,11 +20,17 @@ public:
         while (true)
         {
             auto client_socket = co_await m_acceptor.async_accept(asio::use_awaitable);
-            SslSocket ssl_client_socket{std::move(client_socket), m_ssl_context};   /// <==== SSL is here
-            co_await ssl_client_socket.async_handshake(asio::ssl::stream_base::server, asio::use_awaitable);
-
-            auto participant = std::make_unique<SslChatSession>(std::move(ssl_client_socket), chat_room);
-            chat_room->join(std::move(participant));
+            SslSocket ssl_client_socket{std::move(client_socket), m_ssl_context};   /// <==== SSL is here           
+            try
+            {
+                co_await ssl_client_socket.async_handshake(asio::ssl::stream_base::server, asio::use_awaitable);
+                auto participant = std::make_unique<SslChatSession>(std::move(ssl_client_socket), chat_room);
+                chat_room->join(std::move(participant));
+            }
+            catch(const std::exception& e)
+            {
+                std::println("Incoming connection: Could not perform handshake: {}", e.what());
+            }
         }
     }
 };

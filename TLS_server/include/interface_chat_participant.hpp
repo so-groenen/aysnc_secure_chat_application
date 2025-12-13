@@ -15,6 +15,9 @@ typedef std::unique_ptr<IChatParticipant> IChatParticipant_ptr;
 
 namespace chat_participant
 {
+    // for the set to work we need to know what it means that two unique ptrs/a pointer and a unique ptr are equal
+    // & how to hash them.
+
     namespace details 
     {
         struct ChatPartHash_

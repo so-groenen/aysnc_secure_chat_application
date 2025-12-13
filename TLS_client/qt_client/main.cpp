@@ -1,24 +1,27 @@
 #include "mainwindow.h"
-#include "ssl_client_model.h"
-#include "app_presenter.h"
+// #include "ssl_client_model.h"
+// #include "tcp_client_model.h"
+// #include "abstract_tcp_presenter.h"
+// #include "app_presenter.h"
+// #include "tcp_presenter.h"
+// #include "ssl_presenter.h"
 #include <QObject>
 #include <QApplication>
 #include <QStringView>
+// #include "abstract_tcp_model.h"
 
-constexpr QStringView DEFAULT_HOSTNAME = u"so-VivoBook-ASUSLaptop-X530FN-S530FN";
-constexpr QStringView PASSWORD         = u"louvre";
-constexpr uint16_t    PORT             = 6970;
+
+// constexpr uint16_t    PORT             = 6970;
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    std::unique_ptr<ISslClientModel> tcp_client = std::make_unique<SslClientModel>(PORT);
-    std::unique_ptr<ISslView> tcp_view          = std::make_unique<MainWindow>();
-    tcp_view->set_default_hostname(DEFAULT_HOSTNAME);
-    tcp_view->set_password(PASSWORD);
+    // AbstractTcpModel_ptr tcp_client     = std::make_unique<TcpClientModel>(PORT);
+    // AbstractTcpPresenter_ptr presenter  = std::make_unique<TcpPresenter>(std::move(tcp_client));
 
-    AppPresenter presenter{std::move(tcp_client), std::move(tcp_view)};
-    presenter.show();
+    MainWindow main_window{};
+
+    main_window.show();
     return a.exec();
 }

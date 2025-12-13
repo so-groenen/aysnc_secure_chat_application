@@ -11,7 +11,7 @@ function make_private_key
 {
 	echo "Making private key:"
 	openssl genrsa -aes256 -out $1.key 4096
-    echo ""
+	echo ""
 }
 function make_certificate_from_key
 {
@@ -51,7 +51,9 @@ echo "Setting up rootCA, then entity [for ex: server] private/public keys"
 echo ""
 read -p "PROJECT NAME: " project
 
-rm -r    $project
+if [ -d $project ]; then
+	rm -r    $project
+fi 
 mkdir -p $project
 cd 	     $project
 

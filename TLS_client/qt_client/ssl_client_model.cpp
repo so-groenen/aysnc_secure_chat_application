@@ -33,11 +33,11 @@ SslClientModel::SslClientModel(uint16_t Port, QObject *parent)
             {
                 qDebug() << m_ssl_socket.peerName(); // for ex: 127.0.0.1 vs 127.0.1.1 errors
                 // can be be mitigated by adding "aliase" for the name (SANs or Subject Alternative Names)
-#ifdef QT_DEBUG
+// #ifdef QT_DEBUG
                 QList<QSslError> self_sign_err{err};
                 qDebug() << "DEBUG IGNORING HostNameMismatch";
                 m_ssl_socket.ignoreSslErrors(self_sign_err);
-#endif
+// #endif
             }
         }
     });

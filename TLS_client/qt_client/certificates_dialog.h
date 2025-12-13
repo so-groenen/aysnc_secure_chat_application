@@ -35,7 +35,7 @@ private:
     bool m_has_public{};
     bool m_has_rootCA{};
     SecurityBundle m_security_bundle{};
-    std::optional<QDir> m_certs_dir{"/home/so/Desktop/programming/C_plusPlus/GITHUB_PROJECTS/QSsl_Client_Server_example/certs"};
+    std::optional<QDir> m_certs_dir{"/home/so/Desktop/programming/C_plusPlus/GITHUB_PROJECTS/aysnc_chat_application/TLS_client/client_certificates"};
 };
 
 #endif // CERTIFICATES_DIALOG_H

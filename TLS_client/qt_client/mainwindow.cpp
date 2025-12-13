@@ -1,14 +1,29 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 #include <cassert>
+#include "certificates_dialog.h"
+#include "server_settings.h"
+#include "ssl_client_model.h"
+#include "ssl_presenter.h"
+#include "tcp_client_model.h"
+#include "tcp_presenter.h"
+#include "user_name_dialog.h"
 
+static constexpr QStringView DEFAULT_HOSTNAME = u"so-VivoBook-ASUSLaptop-X530FN-S530FN";
+static constexpr QStringView PASSWORD         = u"louvre";
 
-
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent)
     : QMainWindow(parent),
     m_managed_ui{std::make_unique<Ui::MainWindow>()},
     ui{m_managed_ui.get()}
+    //,m_presenter{std::move(presenter)}
 {
+
+    // TODO: LOAD CONFIG FROM FILE
+    set_default_hostname(DEFAULT_HOSTNAME);
+    set_password(PASSWORD);
+
+    ////////////////////////////////////////
     ui->setupUi(this);
     ui->SendBtn->setEnabled(m_is_connected);
     ui->username->setText(m_username);
@@ -20,9 +35,12 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(ui->MessageEdit, &MyTextEdit::pressEnterEvent, this, &MainWindow::on_SendBtn_clicked);
 
     set_Btn_to_connect();
-    dispatch_user_info_dialog();
-}
 
+    //Dialogs:
+    ////////////////////////////////////////
+    dispatch_user_info_dialog();
+    on_actionEdit_Server_triggered();
+}
 void MainWindow::set_default_hostname(QStringView host)
 {
     m_hostname = QString{host};
@@ -158,10 +176,54 @@ void MainWindow::dispatch_user_info_dialog()
     }
 }
 
-void MainWindow::attach(ISslClient *presenter)
+void MainWindow::set_connection_mode()
 {
-    m_presenter = presenter;
+    if(m_is_connected)
+        on_connectBtn_clicked();
+
+
+    switch (m_connection_mode)
+    {
+    case ConnectionMode::Tcp:
+        {
+            auto tcp_model = std::make_unique<TcpClientModel>(m_port);
+            m_presenter    = std::make_unique<TcpPresenter>(std::move(tcp_model));
+            m_ssl          = None;
+            m_presenter->attach(this);
+            for (const auto action : ui->menuedit->actions())
+            {
+                if (action->text() == "Edit Certificates")
+                {
+                    action->setEnabled(false);
+                    break;
+                }
+            }
+        }
+        break;
+    case ConnectionMode::Ssl:
+        {
+            auto ssl_model = std::make_unique<SslClientModel>(m_port);
+            m_presenter    = std::make_unique<SslPresenter>(std::move(ssl_model));
+            m_ssl          = dynamic_cast<ISecureSocketLayer*>(m_presenter.get());
+            m_presenter->attach(this);
+            for (const auto action : ui->menuedit->actions())
+            {
+                if (action->text() == "Edit Certificates")
+                {
+                    action->setEnabled(true);
+                    break;
+                }
+            }
+            on_actionEdit_Certificates_triggered();
+        }
+        break;
+    }
 }
+
+// void MainWindow::attach(ISslClient *presenter)
+// {
+//     m_presenter = presenter;
+// }
 
 void MainWindow::on_connectBtn_clicked()
 {
@@ -208,18 +270,19 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_actionEdit_Server_triggered()
 {
-    ServerSettings setting_diaglog{m_port, m_password, m_hostname};
+    ServerSettings setting_diaglog{m_connection_mode, m_port, m_password, m_hostname};
     setting_diaglog.setModal(true);
     if(setting_diaglog.exec() ==  QDialog::Accepted)
     {
-        m_password = setting_diaglog.password();
-        m_hostname = setting_diaglog.host();
-        m_port     = setting_diaglog.port();
-
+        m_password        = setting_diaglog.password();
+        m_hostname        = setting_diaglog.host();
+        m_port            = setting_diaglog.port();
+        m_connection_mode = setting_diaglog.connection_mode();
         qDebug() << "got pass:" << setting_diaglog.password();
         qDebug() << "got port:" << setting_diaglog.port();
         qDebug() << "got host:" << setting_diaglog.host();
 
+        set_connection_mode();
         m_presenter->set_port(m_port);
     }
 }
@@ -236,21 +299,28 @@ void MainWindow::on_actionEdit_Username_triggered()
 
 void MainWindow::on_actionEdit_Certificates_triggered()
 {
+    if(!m_ssl.has_value())
+    {
+        qDebug() << "No Secure layer set!";
+        return;
+    }
+
     CertificatesDialog cert_diaglog{std::move(m_keys_and_certificates)};
     cert_diaglog.setModal(true);
     if(cert_diaglog.exec() ==  QDialog::Accepted)
     {
         m_keys_and_certificates = std::move(cert_diaglog.get_security_bundle());
 
-        // m_keys_and_certificates.private_key = cert_diaglog.get_private_key();
-        // m_keys_and_certificates.public_key  = cert_diaglog.get_public_key();
-        // m_keys_and_certificates.root_CA     = cert_diaglog.get_root_CA();
-
         //m_ssl_interface
-        m_presenter->set_private_key(m_keys_and_certificates.private_key);
-        m_presenter->set_public_key(m_keys_and_certificates.public_key);
-        m_presenter->set_root_CA(m_keys_and_certificates.root_CA);
-
+        m_ssl.value()->set_private_key(m_keys_and_certificates.private_key);
+        m_ssl.value()->set_public_key(m_keys_and_certificates.public_key);
+        m_ssl.value()->set_root_CA(m_keys_and_certificates.root_CA);
     }
+}
+
+
+void MainWindow::on_actionEdit_Certificates_checkableChanged(bool checkable)
+{
+
 }
 

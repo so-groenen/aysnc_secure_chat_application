@@ -27,21 +27,15 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         ssl_client_model.h
         ssl_client_model.cpp
-        interface_ssl_presenter.h
         interface_tcp_view.h
-        app_presenter.h
         interface_tcp_client.h
         interface_tcp_event_handler.h
-        interface_ssl_client_model.h
-        app_presenter.cpp
-        interface_ssl_presenter.h
         server_settings.h
         server_settings.cpp
         server_settings.ui
         user_name_dialog.h user_name_dialog.cpp user_name_dialog.ui
         message_handler.h message_handler.cpp
         formatted_message.h formatted_message.cpp
-
         message_variant.h
         my_text_edit.h my_text_edit.cpp
         bubble_delegate.h bubble_delegate.cpp
@@ -54,6 +48,16 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         interface_ssl.h
         interface_ssl_client.h
         security_bundle.h
+        abstract_tcp_presenter.h
+        abstract_ssl_presenter.h
+        tcp_presenter.h
+        tcp_presenter.cpp
+        abstract_tcp_model.h
+        ssl_presenter.h
+        abstract_ssl_model.h
+        ssl_presenter.cpp
+        tcp_client_model.h tcp_client_model.cpp
+        connection_mode.h
     )
 
 target_include_directories(tls_client PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
@@ -74,6 +78,13 @@ else()
             ${PROJECT_SOURCES}
         )
     endif()
+endif()
+
+
+
+if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+    message(STATUS "QT_NO_DEBUG_OUTPUT = ON")
+    target_compile_definitions(tls_client PUBLIC QT_NO_DEBUG_OUTPUT)
 endif()
 
 target_link_libraries(tls_client PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)

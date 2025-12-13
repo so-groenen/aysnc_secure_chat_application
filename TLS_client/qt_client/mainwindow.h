@@ -1,20 +1,31 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "my_text_edit.h"
+// #include "my_text_edit.h"
 #include <QMainWindow>
 #include <memory>
-#include "interface_ssl_presenter.h"
+// #include "interface_ssl_presenter.h"
 #include "interface_tcp_view.h"
+#include "abstract_tcp_presenter.h"
+// #include "abstract_ssl_presenter.h"
 #include <QTextEdit>
 #include "server_settings.h"
-#include "user_name_dialog.h"
 #include "formatted_message_model.h"
 #include "bubble_delegate.h"
 #include "line_message_delegate.h"
 #include "message_delegate_modes.h"
-#include "certificates_dialog.h"
+// #include "certificates_dialog.h"
 #include "security_bundle.h"
+#include "interface_ssl.h"
+#include <optional>
+
+
+
+#include "abstract_tcp_presenter.h"
+// #include "app_presenter.h"
+// #include "tcp_presenter.h"
+// #include "ssl_presenter.h"
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -22,18 +33,20 @@ class MainWindow;
 }
 QT_END_NAMESPACE
 
+template<typename T>
+using Option     = std::optional<T>;
+inline auto None = std::nullopt;
 
-
-class MainWindow : public QMainWindow, public ISslView
+class MainWindow : public QMainWindow, public ITcpView
 {
     Q_OBJECT
 
 private:
     std::unique_ptr<Ui::MainWindow> m_managed_ui{};
     Ui::MainWindow* ui;
+    AbstractTcpPresenter_ptr m_presenter{}; // should be only TcpClient then
+    Option<ISecureSocketLayer*> m_ssl{};
 
-    ISslClient* m_presenter{}; // should be only TcpClient then
-    // ISecureSocketLayer m_ssl_interface{};
     bool m_is_connected{false};
     QString m_username{"Your name"};
     QString m_name{"me"};
@@ -42,6 +55,7 @@ private:
     QString m_hostname{""};
     QColor m_font_color{255, 182, 193};
     bool m_clear_history_on_reconnect{true};
+    ConnectionMode m_connection_mode{ConnectionMode::Tcp};
     DelegateMode m_delegate_mode{DelegateMode::BubbleDelegate};
 
     SecurityBundle m_keys_and_certificates{};
@@ -52,11 +66,12 @@ private:
 private:
     void set_Btn_to_connect();
     void set_Btn_to_disconnect();
-    void dispatch_user_info_dialog();
-
+    void set_connection_mode();
 public:
     ~MainWindow();
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent = nullptr);
+    void dispatch_user_info_dialog();
+    void dispatch_server_setting_dialog();
 
     // TCP Event Handler
     void handle_connect_response(const ConnectionResult& connect_result) override;
@@ -65,12 +80,12 @@ public:
     void handle_disconnect_from_host() override;
 
     // View
-    void attach(ISslClient* presenter) override;
+    // void attach(ISslClient* presenter) override;
     const QString& get_password() const override;
     const QString& get_username() const override;
     QColor get_font_color() const override;
-    void set_default_hostname(QStringView host) override;
-    void set_password(QStringView password) override;
+    void set_default_hostname(QStringView host);
+    void set_password(QStringView password);
 private:
     void set_delegate(DelegateMode mode);
 
@@ -80,5 +95,6 @@ private slots:
     void on_actionEdit_Server_triggered();
     void on_actionEdit_Username_triggered();
     void on_actionEdit_Certificates_triggered();
+    void on_actionEdit_Certificates_checkableChanged(bool checkable);
 };
 #endif // MAINWINDOW_H

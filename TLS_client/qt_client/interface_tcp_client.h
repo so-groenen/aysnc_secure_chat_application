@@ -2,7 +2,6 @@
 #define INTERFACE_TCP_CLIENT_H
 
 #include <QString>
-#include <iostream>
 
 
 // When an event occurs in Qt widget, we forward it to the presenter...

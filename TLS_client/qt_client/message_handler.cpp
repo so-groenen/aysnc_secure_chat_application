@@ -6,7 +6,6 @@ static constexpr const char* ID   {"id"};
 static constexpr const char* COLOR{"color"};
 
 
-
 MessageHandler::MessageHandler(const QString& username, QColor color, qint64 session_id)
     : m_username{username}, m_color{color}, m_session_id{session_id}
 {
@@ -64,7 +63,7 @@ QColor MessageHandler::get_font_color() const
 
 MessageHandler::~MessageHandler()
 {
-    qDebug() << "Message Handler destoyred";
+    qDebug() << "Message Handler destroyed";
 }
 
 

@@ -37,6 +37,11 @@ Makefile*
 *.qm
 *.prl
 
+
+#backup 
+TLS_client/BACKUP_qt_client 
+TLS_client/_async_python_client
+
 # personnal files
 TLS_client/qt_client/build
 client 
