@@ -1,13 +1,9 @@
 #ifndef HAND_SHAKER_H
 #define HAND_SHAKER_H
 #include "interface_tcp_view.h"
-// #include "interface_ssl_presenter.h"
-// #include "interface_ssl_client_model.h"
 #include "interface_tcp_client.h"
-// #include "abstract_tcp_model.h"
 #include <QString>
 #include <memory>
-// #include "formatted_message.h"
 #include "message_handler.h"
 
 
@@ -27,7 +23,6 @@ private:
         Ok
     };
 
-    // ISslClientModel* m_model{};
     ITcpClient* m_model{};
     ITcpView* m_view{};
     qint64 m_session_id{-1};

@@ -1,8 +1,9 @@
 #include "certificates_dialog.h"
 #include "ui_certificates_dialog.h"
 
-CertificatesDialog::CertificatesDialog(SecurityBundle &&keys_and_certs, QWidget *parent)
-    : QDialog(parent)
+CertificatesDialog::CertificatesDialog(const fs::path& path_to_certs, SecurityBundle &&keys_and_certs, QWidget *parent)
+    : QDialog(parent),
+    m_certs_dir{path_to_certs}
     , ui(new Ui::CertificatesDialog), m_security_bundle{std::move(keys_and_certs)}
 {
     ui->setupUi(this);

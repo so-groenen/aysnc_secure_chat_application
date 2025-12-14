@@ -1,0 +1,7 @@
+{
+    "connection type": "ssl",
+    "password": "louvre",
+    "port": "6970", 
+    "path/to/certificates": "certificates",
+    "client root CA subdir": "client_root_CAs"
+}

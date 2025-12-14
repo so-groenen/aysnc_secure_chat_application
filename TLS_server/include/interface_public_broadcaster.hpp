@@ -1,6 +1,6 @@
 #ifndef IPUBLIC_BROADCASTER_HPP
 #define IPUBLIC_BROADCASTER_HPP
-#include <iostream>
+// #include <iostream>
 #include <memory>
 
 class IPublicBroadcaster

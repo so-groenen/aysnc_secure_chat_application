@@ -18,10 +18,11 @@
 #include "security_bundle.h"
 #include "interface_ssl.h"
 #include <optional>
-
-
-
 #include "abstract_tcp_presenter.h"
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
 // #include "app_presenter.h"
 // #include "tcp_presenter.h"
 // #include "ssl_presenter.h"
@@ -50,7 +51,8 @@ private:
     bool m_is_connected{false};
     QString m_username{"Your name"};
     QString m_name{"me"};
-    QString m_password{"louvre"};           
+    QString m_password{""};
+    fs::path m_certs_dir{};
     uint16_t m_port{6970};
     QString m_hostname{""};
     QColor m_font_color{255, 182, 193};

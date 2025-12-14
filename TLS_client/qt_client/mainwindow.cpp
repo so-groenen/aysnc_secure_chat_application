@@ -8,9 +8,14 @@
 #include "tcp_client_model.h"
 #include "tcp_presenter.h"
 #include "user_name_dialog.h"
+#include "json_loader.h"
 
-static constexpr QStringView DEFAULT_HOSTNAME = u"so-VivoBook-ASUSLaptop-X530FN-S530FN";
-static constexpr QStringView PASSWORD         = u"louvre";
+static constexpr QStringView HOSTNAME      = u"hostname";
+static constexpr QStringView PASSWORD      = u"password";
+static constexpr QStringView PORT          = u"port";
+static constexpr QStringView PATH_TO_CERTS = u"path to certs";
+
+
 
 MainWindow::MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent)
     : QMainWindow(parent),
@@ -19,9 +24,34 @@ MainWindow::MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent)
     //,m_presenter{std::move(presenter)}
 {
 
-    // TODO: LOAD CONFIG FROM FILE
-    set_default_hostname(DEFAULT_HOSTNAME);
-    set_password(PASSWORD);
+    auto app_dir = get_application_dir_path();
+    auto config  = load_json_from_file(app_dir / "chat_app_config.json");
+    QJsonObject json_config{};
+
+    if(!config.has_value())
+    {
+        json_config[PASSWORD]      = "password";
+        json_config[HOSTNAME]      = "default hostname";
+        json_config[PORT]          = "4242";
+        json_config[PATH_TO_CERTS] = QString::fromStdString(fs::current_path().string());
+
+        save_json_to_file(app_dir / "chat_app_config.json", json_config);
+        qDebug() << "json config saved";
+    }
+    else
+    {
+        json_config = std::move(config.value());
+        qDebug() << "json config loaded";
+    }
+    m_hostname  = json_config.value(HOSTNAME).toString();
+    m_password  = json_config.value(PASSWORD).toString();
+    m_port      = static_cast<uint16_t>(json_config.value(PORT).toInt());
+    m_certs_dir = json_config.value(PATH_TO_CERTS).toString().toStdString();
+    if(!fs::exists(m_certs_dir))
+    {
+        m_certs_dir = fs::current_path();
+    }
+
 
     ////////////////////////////////////////
     ui->setupUi(this);
@@ -220,11 +250,6 @@ void MainWindow::set_connection_mode()
     }
 }
 
-// void MainWindow::attach(ISslClient *presenter)
-// {
-//     m_presenter = presenter;
-// }
-
 void MainWindow::on_connectBtn_clicked()
 {
     if(!m_is_connected)
@@ -305,7 +330,7 @@ void MainWindow::on_actionEdit_Certificates_triggered()
         return;
     }
 
-    CertificatesDialog cert_diaglog{std::move(m_keys_and_certificates)};
+    CertificatesDialog cert_diaglog{m_certs_dir, std::move(m_keys_and_certificates)};
     cert_diaglog.setModal(true);
     if(cert_diaglog.exec() ==  QDialog::Accepted)
     {

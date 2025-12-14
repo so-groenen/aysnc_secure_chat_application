@@ -58,6 +58,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ssl_presenter.cpp
         tcp_client_model.h tcp_client_model.cpp
         connection_mode.h
+        json_loader.h
     )
 
 target_include_directories(tls_client PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

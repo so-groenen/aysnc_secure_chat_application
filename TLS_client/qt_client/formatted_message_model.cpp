@@ -14,7 +14,7 @@ int FormattedMessageListModel::rowCount(const QModelIndex &parent) const
 QVariant FormattedMessageListModel::data(const QModelIndex &index, int role) const
 {
     if(role != Qt::DisplayRole)
-        return QVariant{m_messages.at(index.row()).username()};
+        return{};
 
     FormattedMessage msg = m_messages.at(index.row());
     QVariant var;

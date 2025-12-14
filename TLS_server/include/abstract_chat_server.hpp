@@ -10,6 +10,7 @@
 #include <asio/co_spawn.hpp>
 #include <asio/awaitable.hpp>
 #include <asio/use_awaitable.hpp>
+#include <memory>
 
 using asio::ip::tcp;
  
@@ -20,11 +21,13 @@ class AbstractChatServer
 protected:
     asio::ip::tcp::acceptor m_acceptor;
 public:
+    virtual ~AbstractChatServer() = default;
     AbstractChatServer(asio::io_context& io, unsigned short port)
         : m_io{io}, m_acceptor{tcp::acceptor(io, {tcp::v4(), port})}, m_port{port}
     {
     }
     virtual awaitable<void> serve_forever(std::shared_ptr<IChatRoom> chat_room) = 0;
+
     unsigned short port() const 
     {
         return m_port;
@@ -41,5 +44,8 @@ public:
         }, asio::detached);
     }
 };
+using AbstractChatServer_ptr = std::unique_ptr<AbstractChatServer>;
+
+
 
 #endif

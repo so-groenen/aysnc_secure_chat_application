@@ -37,7 +37,8 @@ Makefile*
 *.qm
 *.prl
 
-
+#clangd
+.cache
 #backup 
 TLS_client/BACKUP_qt_client 
 TLS_client/_async_python_client

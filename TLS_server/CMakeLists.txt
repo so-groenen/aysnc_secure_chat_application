@@ -4,8 +4,11 @@ project(async_chat_server VERSION 0.1.0 LANGUAGES C CXX)
 add_executable(async_chat_server src/main.cpp
                                  src/ssl_loader.cpp
                                  src/chat_room.cpp
-                                 src/abstract_chat_session.cpp)
- 
+                                #  src/abstract_chat_session.cpp
+                                 src/chat_session.cpp
+                                 src/async_secure_socket.cpp
+                                 src/async_tcp_socket.cpp
+                                 src/json_loader.cpp)
 
 target_compile_features    (async_chat_server PRIVATE cxx_std_23)
 target_include_directories (async_chat_server PRIVATE include)
@@ -24,10 +27,10 @@ add_custom_command(
     TARGET async_chat_server
     PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_CURRENT_SOURCE_DIR}/password.txt 
-    $<TARGET_FILE_DIR:async_chat_server>/password.txt
+    ${CMAKE_CURRENT_SOURCE_DIR}/chat_app_server_config.json 
+    $<TARGET_FILE_DIR:async_chat_server>/chat_app_server_config.json
 )
 
 if(MINGW)
-    target_link_libraries(async_chat_server PRIVATE ws2_32 wsock32 )
+    target_link_libraries(async_chat_server PRIVATE ws2_32 wsock32)
 endif()
