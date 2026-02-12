@@ -82,13 +82,10 @@ void TcpClientModel::look_up_host_infos(const QHostInfo &host)
     connecting_to_host();
 }
 
-
 void TcpClientModel::connecting_to_host()
 {
     m_socket.connectToHost(m_server_address, m_port);
-    // m_socket.waitForConnected(300);
-    // m_is_connected = m_socket.waitForConnected();
-    m_is_connected = m_socket.waitForConnected(300);
+    m_is_connected = m_socket.waitForConnected(500);
     if (m_is_connected)
     {
         m_socket.open(QIODevice::ReadWrite);
@@ -99,7 +96,7 @@ void TcpClientModel::connecting_to_host()
     else
     {
         qDebug() << "Socket opening failure";
-        // m_presenter->handle_connect_response(std::unexpected(m_socket.errorString()));
+        m_presenter->handle_connect_response(std::unexpected(m_socket.errorString()));
     }
 }
 

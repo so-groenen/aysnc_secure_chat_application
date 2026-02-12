@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Network settings</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2">
+  <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QGridLayout" name="gridLayout_2">
      <item row="3" column="1">
@@ -45,11 +45,11 @@
       </widget>
      </item>
      <item row="4" column="1">
-      <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,2">
+      <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,3">
        <item>
-        <widget class="QRadioButton" name="broadcastNameOff">
+        <widget class="QRadioButton" name="broadcastNameOn">
          <property name="text">
-          <string>Off</string>
+          <string>On</string>
          </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroup</string>
@@ -57,9 +57,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QRadioButton" name="broadcastNameOn">
+        <widget class="QRadioButton" name="broadcastNameOff">
          <property name="text">
-          <string>On</string>
+          <string>Off</string>
          </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroup</string>
@@ -114,11 +114,11 @@
       </widget>
      </item>
      <item row="5" column="1">
-      <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="1,2">
+      <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="1,3">
        <item>
-        <widget class="QRadioButton" name="sslRadio">
+        <widget class="QRadioButton" name="tcpRadio">
          <property name="text">
-          <string>SSL </string>
+          <string>TCP/IP</string>
          </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroup_2</string>
@@ -126,9 +126,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QRadioButton" name="tcpRadio">
+        <widget class="QRadioButton" name="sslRadio">
          <property name="text">
-          <string>TCP/IP</string>
+          <string>SSL </string>
          </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroup_2</string>
