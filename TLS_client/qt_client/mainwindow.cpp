@@ -19,11 +19,10 @@ static constexpr QStringView MAX_CHARS      = u"max chars.";
 static constexpr QStringView BROADCAST_NAME = u"broadcast name";
 static constexpr std::string_view CONFIG_JSON = "chat_app_config.json";
 
-MainWindow::MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent)
+MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
     m_managed_ui{std::make_unique<Ui::MainWindow>()},
     ui{m_managed_ui.get()}
-    //,m_presenter{std::move(presenter)}
 {
 
     if(!fs::exists(m_certs_dir))
@@ -290,7 +289,7 @@ auto MainWindow::load_json_config() -> Option<QJsonObject>
     if(!config.has_value())
     {
         qDebug() << "json empy";
-        return std::nullopt;
+        return None;
     }
     else
     {

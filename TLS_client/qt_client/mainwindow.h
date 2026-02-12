@@ -5,16 +5,13 @@
 #include <QMainWindow>
 #include <memory>
 #include "server_settings.h"
-// #include "interface_ssl_presenter.h"
 #include "interface_tcp_view.h"
 #include "abstract_tcp_presenter.h"
-// #include "abstract_ssl_presenter.h"
 #include <QTextEdit>
 #include "formatted_message_model.h"
 #include "bubble_delegate.h"
 #include "line_message_delegate.h"
 #include "message_delegate_modes.h"
-// #include "certificates_dialog.h"
 #include "security_bundle.h"
 #include "interface_ssl.h"
 #include <optional>
@@ -22,10 +19,6 @@
 #include <filesystem>
 
 namespace fs = std::filesystem;
-
-// #include "app_presenter.h"
-// #include "tcp_presenter.h"
-// #include "ssl_presenter.h"
 
 
 QT_BEGIN_NAMESPACE
