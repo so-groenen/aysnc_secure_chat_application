@@ -68,10 +68,13 @@ private:
     std::unique_ptr<LineMessageDelegate>        m_line_msg_delegate{std::make_unique<LineMessageDelegate>()};
 
 private:
+    void set_delegate(DelegateMode mode);
+    void check_txt_len();
+    void save_config();
+private:
     void set_Btn_to_connect();
     void set_Btn_to_disconnect();
     void set_connection_mode();
-    void check_txt_len();
 public:
     ~MainWindow();
     MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent = nullptr);
@@ -91,8 +94,8 @@ public:
     QColor get_font_color() const override;
     void set_default_hostname(QStringView host);
     void set_password(QStringView password);
-private:
-    void set_delegate(DelegateMode mode);
+
+
 
 private slots:
     void on_SendBtn_clicked();

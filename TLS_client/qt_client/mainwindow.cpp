@@ -11,13 +11,13 @@
 #include "json_loader.h"
 #include <QMessageBox>
 
-static constexpr QStringView HOSTNAME      = u"hostname";
-static constexpr QStringView PASSWORD      = u"password";
-static constexpr QStringView PORT          = u"port";
-static constexpr QStringView PATH_TO_CERTS = u"path to certs";
+static constexpr QStringView HOSTNAME       = u"hostname";
+static constexpr QStringView PASSWORD       = u"password";
+static constexpr QStringView PORT           = u"port";
+static constexpr QStringView PATH_TO_CERTS  = u"path to certs";
+static constexpr QStringView MAX_CHARS      = u"max chars.";
 static constexpr QStringView BROADCAST_NAME = u"broadcast name";
-
-
+static constexpr std::string_view CONFIG_JSON = "chat_app_config.json";
 
 MainWindow::MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent)
     : QMainWindow(parent),
@@ -35,6 +35,7 @@ MainWindow::MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent)
         json_config[PASSWORD]       = "louvre";
         json_config[HOSTNAME]       = "192.168.1.33";
         json_config[PORT]           = 4242;
+        json_config[MAX_CHARS]      = 128;
         json_config[BROADCAST_NAME] = true;
         json_config[PATH_TO_CERTS]  = QString::fromStdString(fs::current_path().string());
 
@@ -50,6 +51,7 @@ MainWindow::MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent)
     m_hostname              = json_config.value(HOSTNAME).toString();
     m_password              = json_config.value(PASSWORD).toString();
     m_should_broadcast_name = json_config.value(BROADCAST_NAME).toBool(false);
+    m_max_char              = static_cast<uint32_t>(json_config.value(MAX_CHARS).toInt());
     m_port                  = static_cast<uint16_t>(json_config.value(PORT).toInt());
     m_certs_dir             = json_config.value(PATH_TO_CERTS).toString().toStdString();
 
@@ -271,8 +273,34 @@ void MainWindow::check_txt_len()
         cursor.setPosition(ui->MessageEdit->document()->characterCount() - 1);
         ui->MessageEdit->setTextCursor(cursor);
     }
-
 }
+
+void MainWindow::save_config()
+{
+    auto app_dir = get_application_dir_path();
+    auto config  = load_json_from_file(app_dir / CONFIG_JSON);
+    QJsonObject json_config{};
+
+    if(!config.has_value())
+    {
+        json_config[PASSWORD]       = m_password;
+        json_config[HOSTNAME]       = m_hostname;
+        json_config[PORT]           = m_port;
+        json_config[MAX_CHARS]      = static_cast<int>(m_max_char);
+        json_config[BROADCAST_NAME] = m_should_broadcast_name;
+        json_config[PATH_TO_CERTS]  = QString::fromStdString(m_certs_dir.string());
+
+        save_json_to_file(app_dir / CONFIG_JSON, json_config);
+        qDebug() << "json config saved";
+    }
+    else
+    {
+        QMessageBox::warning(this, "Json config save error", config.error());
+    }
+}
+
+
+
 
 void MainWindow::on_connectBtn_clicked()
 {
@@ -336,6 +364,8 @@ void MainWindow::on_actionEdit_Server_triggered()
 
         set_connection_mode();
         m_presenter->set_port(m_port);
+
+        // save_config();
     }
 }
 
