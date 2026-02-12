@@ -26,39 +26,50 @@ MainWindow::MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent)
     //,m_presenter{std::move(presenter)}
 {
 
-    auto app_dir = get_application_dir_path();
-    auto config  = load_json_from_file(app_dir / "chat_app_config.json");
-    QJsonObject json_config{};
+    // auto app_dir = get_application_dir_path();
+    // auto config  = load_json_from_file(app_dir / CONFIG_JSON);
+    // QJsonObject json_config{};
 
-    if(!config.has_value())
-    {
-        json_config[PASSWORD]       = "louvre";
-        json_config[HOSTNAME]       = "192.168.1.33";
-        json_config[PORT]           = 4242;
-        json_config[MAX_CHARS]      = 128;
-        json_config[BROADCAST_NAME] = true;
-        json_config[PATH_TO_CERTS]  = QString::fromStdString(fs::current_path().string());
+    // if(!config.has_value())
+    // {
+    //     json_config[PASSWORD]       = "louvre";
+    //     json_config[HOSTNAME]       = "192.168.1.33";
+    //     json_config[PORT]           = 4242;
+    //     json_config[MAX_CHARS]      = 128;
+    //     json_config[BROADCAST_NAME] = true;
+    //     json_config[PATH_TO_CERTS]  = QString::fromStdString(fs::current_path().string());
 
-        save_json_to_file(app_dir / "chat_app_config.json", json_config);
-        qDebug() << "json config saved";
-    }
-    else
-    {
-        json_config = std::move(config.value());
-        qDebug() << "json config loaded";
-    }
-
-    m_hostname              = json_config.value(HOSTNAME).toString();
-    m_password              = json_config.value(PASSWORD).toString();
-    m_should_broadcast_name = json_config.value(BROADCAST_NAME).toBool(false);
-    m_max_char              = static_cast<uint32_t>(json_config.value(MAX_CHARS).toInt());
-    m_port                  = static_cast<uint16_t>(json_config.value(PORT).toInt());
-    m_certs_dir             = json_config.value(PATH_TO_CERTS).toString().toStdString();
+    //     save_json_to_file(app_dir / "chat_app_config.json", json_config);
+    //     qDebug() << "json default config saved";
+    // }
+    // else
+    // {
+    //     json_config = std::move(config.value());
+    //     qDebug() << "json config loaded";
+    // }
 
     if(!fs::exists(m_certs_dir))
     {
         m_certs_dir = fs::current_path();
     }
+
+    auto json_config_res = load_json_config();
+    if(json_config_res)
+    {
+        QJsonObject json_config = json_config_res.value();
+        m_hostname              = json_config.value(HOSTNAME).toString();
+        m_password              = json_config.value(PASSWORD).toString();
+        m_should_broadcast_name = json_config.value(BROADCAST_NAME).toBool(false);
+        m_max_char              = static_cast<uint32_t>(json_config.value(MAX_CHARS).toInt());
+        m_port                  = static_cast<uint16_t>(json_config.value(PORT).toInt());
+        m_certs_dir             = json_config.value(PATH_TO_CERTS).toString().toStdString();
+    }
+    else
+    {
+        save_config(); // save default
+    }
+
+
 
 
     ////////////////////////////////////////
@@ -278,25 +289,37 @@ void MainWindow::check_txt_len()
 void MainWindow::save_config()
 {
     auto app_dir = get_application_dir_path();
+    QJsonObject json_config{};
+
+    json_config[PASSWORD]       = m_password;
+    json_config[HOSTNAME]       = m_hostname;
+    json_config[PORT]           = m_port;
+    json_config[MAX_CHARS]      = static_cast<int>(m_max_char);
+    json_config[BROADCAST_NAME] = m_should_broadcast_name;
+    json_config[PATH_TO_CERTS]  = QString::fromStdString(m_certs_dir.string());
+
+    save_json_to_file(app_dir / CONFIG_JSON, json_config);
+    qDebug() << "json config saved";
+
+}
+
+auto MainWindow::load_json_config() -> Option<QJsonObject>
+{
+    auto app_dir = get_application_dir_path();
     auto config  = load_json_from_file(app_dir / CONFIG_JSON);
     QJsonObject json_config{};
 
     if(!config.has_value())
     {
-        json_config[PASSWORD]       = m_password;
-        json_config[HOSTNAME]       = m_hostname;
-        json_config[PORT]           = m_port;
-        json_config[MAX_CHARS]      = static_cast<int>(m_max_char);
-        json_config[BROADCAST_NAME] = m_should_broadcast_name;
-        json_config[PATH_TO_CERTS]  = QString::fromStdString(m_certs_dir.string());
-
-        save_json_to_file(app_dir / CONFIG_JSON, json_config);
-        qDebug() << "json config saved";
+        qDebug() << "json empy";
+        return std::nullopt;
     }
     else
     {
-        QMessageBox::warning(this, "Json config save error", config.error());
+        json_config = std::move(config.value());
+        qDebug() << "json config loaded";
     }
+    return json_config;
 }
 
 
@@ -365,7 +388,7 @@ void MainWindow::on_actionEdit_Server_triggered()
         set_connection_mode();
         m_presenter->set_port(m_port);
 
-        // save_config();
+        save_config();
     }
 }
 

@@ -71,6 +71,7 @@ private:
     void set_delegate(DelegateMode mode);
     void check_txt_len();
     void save_config();
+    auto load_json_config() -> Option<QJsonObject>;
 private:
     void set_Btn_to_connect();
     void set_Btn_to_disconnect();
