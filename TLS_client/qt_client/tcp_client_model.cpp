@@ -86,9 +86,9 @@ void TcpClientModel::look_up_host_infos(const QHostInfo &host)
 void TcpClientModel::connecting_to_host()
 {
     m_socket.connectToHost(m_server_address, m_port);
-    m_socket.waitForConnected();
-    m_is_connected = m_socket.waitForConnected();
-
+    // m_socket.waitForConnected(300);
+    // m_is_connected = m_socket.waitForConnected();
+    m_is_connected = m_socket.waitForConnected(300);
     if (m_is_connected)
     {
         m_socket.open(QIODevice::ReadWrite);

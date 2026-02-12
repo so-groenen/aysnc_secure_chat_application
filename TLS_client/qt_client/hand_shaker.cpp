@@ -5,6 +5,11 @@ HandShaker::HandShaker(ITcpClient *tcp_model, ITcpView *tcp_view)
 {
 }
 
+void HandShaker::should_broadcast_name(bool val)
+{
+    m_should_broadcast_name = val;
+}
+
 HandShaker::Result HandShaker::parse_session_id(const QString &message)
 {
     qDebug() << "AWAITING SESSION ID:" << message;
@@ -19,6 +24,10 @@ HandShaker::Result HandShaker::parse_session_id(const QString &message)
         return HandShaker::Result::Fail;
     }
     m_handshake_mode  = HandShakeMode::Ok;
+    if(m_should_broadcast_name)
+    {
+        m_model->send_message(m_view->get_username());
+    }
     m_view->handle_connect_response(m_connection_result);
     return HandShaker::Result::Success;
 }

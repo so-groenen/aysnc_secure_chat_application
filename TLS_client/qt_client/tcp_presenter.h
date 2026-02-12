@@ -19,6 +19,7 @@ protected:
 private:
     std::unique_ptr<MessageHandler> m_message_handler{};
     std::unique_ptr<HandShaker> m_handshaker{};
+    bool m_should_broadcast_name{};
     // HandShakeMode m_handshake_mode{HandShakeMode::AwaitHandShake};
     // ConnectionResult m_connect_result{};
 public:
@@ -30,6 +31,7 @@ public:
     void disconnect() override;
     void set_up_connection(const QString& hostname) override;
     void attach(ITcpView* tcp_view) override;
+    void should_broadcast_name(bool val) override;
 
 
     // interface we expose to the TCP client:

@@ -47,6 +47,12 @@ void TcpPresenter::attach(ITcpView* tcp_view)
 
     m_view       = tcp_view;
     m_handshaker = std::make_unique<HandShaker>(m_model.get(), tcp_view);
+    m_handshaker->should_broadcast_name(m_should_broadcast_name);
+}
+
+void TcpPresenter::should_broadcast_name(bool val)
+{
+    m_should_broadcast_name = val;
 }
 
 

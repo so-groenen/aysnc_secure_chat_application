@@ -35,7 +35,7 @@ void FormattedMessageListModel::add_message(const FormattedMessage &msg)
 
 void FormattedMessageListModel::add_unformatted_message(const QString &msg)
 {
-    FormattedMessage formatted_msg{"UNKNOWN", msg, Qt::gray, false};
+    FormattedMessage formatted_msg{"Server", msg, Qt::gray, false};
     m_messages.append(formatted_msg);
     emit layoutChanged();
 }

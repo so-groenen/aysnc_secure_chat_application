@@ -22,16 +22,17 @@ private:
         AwaitSessionId,
         Ok
     };
-
     ITcpClient* m_model{};
     ITcpView* m_view{};
     qint64 m_session_id{-1};
     HandShakeMode m_handshake_mode{HandShakeMode::AwaitHandShake};
     ConnectionResult m_connection_result{};
+    bool m_should_broadcast_name{};
 public:
     explicit HandShaker(ITcpClient* tcp_client, ITcpView* tcp_view);
     // explicit HandShaker(ISslClientModel* tcp_model, ITcpView* tcp_view);
     Result parse_session_id(const QString &message);
+    void should_broadcast_name(bool val);
     void await_handshake(const ConnectionResult& connection_result);
     auto make_message_handler() const -> std::unique_ptr<MessageHandler>;
     void reset();

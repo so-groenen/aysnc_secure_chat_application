@@ -9,11 +9,13 @@
 #include "tcp_presenter.h"
 #include "user_name_dialog.h"
 #include "json_loader.h"
+#include <QMessageBox>
 
 static constexpr QStringView HOSTNAME      = u"hostname";
 static constexpr QStringView PASSWORD      = u"password";
 static constexpr QStringView PORT          = u"port";
 static constexpr QStringView PATH_TO_CERTS = u"path to certs";
+static constexpr QStringView BROADCAST_NAME = u"broadcast name";
 
 
 
@@ -30,10 +32,11 @@ MainWindow::MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent)
 
     if(!config.has_value())
     {
-        json_config[PASSWORD]      = "password";
-        json_config[HOSTNAME]      = "default hostname";
-        json_config[PORT]          = "4242";
-        json_config[PATH_TO_CERTS] = QString::fromStdString(fs::current_path().string());
+        json_config[PASSWORD]       = "louvre";
+        json_config[HOSTNAME]       = "192.168.1.33";
+        json_config[PORT]           = 4242;
+        json_config[BROADCAST_NAME] = true;
+        json_config[PATH_TO_CERTS]  = QString::fromStdString(fs::current_path().string());
 
         save_json_to_file(app_dir / "chat_app_config.json", json_config);
         qDebug() << "json config saved";
@@ -43,10 +46,13 @@ MainWindow::MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent)
         json_config = std::move(config.value());
         qDebug() << "json config loaded";
     }
-    m_hostname  = json_config.value(HOSTNAME).toString();
-    m_password  = json_config.value(PASSWORD).toString();
-    m_port      = static_cast<uint16_t>(json_config.value(PORT).toInt());
-    m_certs_dir = json_config.value(PATH_TO_CERTS).toString().toStdString();
+
+    m_hostname              = json_config.value(HOSTNAME).toString();
+    m_password              = json_config.value(PASSWORD).toString();
+    m_should_broadcast_name = json_config.value(BROADCAST_NAME).toBool(false);
+    m_port                  = static_cast<uint16_t>(json_config.value(PORT).toInt());
+    m_certs_dir             = json_config.value(PATH_TO_CERTS).toString().toStdString();
+
     if(!fs::exists(m_certs_dir))
     {
         m_certs_dir = fs::current_path();
@@ -63,6 +69,7 @@ MainWindow::MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent)
 
     ui->messageListView->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     QObject::connect(ui->MessageEdit, &MyTextEdit::pressEnterEvent, this, &MainWindow::on_SendBtn_clicked);
+    QObject::connect(ui->MessageEdit, &MyTextEdit::textChanged, this, &MainWindow::check_txt_len);
 
     set_Btn_to_connect();
 
@@ -218,6 +225,7 @@ void MainWindow::set_connection_mode()
         {
             auto tcp_model = std::make_unique<TcpClientModel>(m_port);
             m_presenter    = std::make_unique<TcpPresenter>(std::move(tcp_model));
+            m_presenter->should_broadcast_name(m_should_broadcast_name);
             m_ssl          = None;
             m_presenter->attach(this);
             for (const auto action : ui->menuedit->actions())
@@ -234,6 +242,7 @@ void MainWindow::set_connection_mode()
         {
             auto ssl_model = std::make_unique<SslClientModel>(m_port);
             m_presenter    = std::make_unique<SslPresenter>(std::move(ssl_model));
+            m_presenter->should_broadcast_name(m_should_broadcast_name);
             m_ssl          = dynamic_cast<ISecureSocketLayer*>(m_presenter.get());
             m_presenter->attach(this);
             for (const auto action : ui->menuedit->actions())
@@ -248,6 +257,21 @@ void MainWindow::set_connection_mode()
         }
         break;
     }
+}
+
+void MainWindow::check_txt_len()
+{
+    if(ui->MessageEdit->toPlainText().length() > m_max_char)
+    {
+        auto text = ui->MessageEdit->toPlainText();
+        text.chop(text.length() - m_max_char);
+        ui->MessageEdit->setPlainText(text);
+
+        auto cursor = ui->MessageEdit->textCursor();
+        cursor.setPosition(ui->MessageEdit->document()->characterCount() - 1);
+        ui->MessageEdit->setTextCursor(cursor);
+    }
+
 }
 
 void MainWindow::on_connectBtn_clicked()
@@ -295,17 +319,20 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_actionEdit_Server_triggered()
 {
-    ServerSettings setting_diaglog{m_connection_mode, m_port, m_password, m_hostname};
+    ServerSettings setting_diaglog{m_connection_mode, m_port, m_password, m_max_char, m_should_broadcast_name, m_hostname};
     setting_diaglog.setModal(true);
     if(setting_diaglog.exec() ==  QDialog::Accepted)
     {
-        m_password        = setting_diaglog.password();
-        m_hostname        = setting_diaglog.host();
-        m_port            = setting_diaglog.port();
-        m_connection_mode = setting_diaglog.connection_mode();
+        m_password              = setting_diaglog.password();
+        m_hostname              = setting_diaglog.host();
+        m_port                  = setting_diaglog.port();
+        m_max_char              = setting_diaglog.max_char();
+        m_connection_mode       = setting_diaglog.connection_mode();
+        m_should_broadcast_name = setting_diaglog.should_broadcast_name();
         qDebug() << "got pass:" << setting_diaglog.password();
         qDebug() << "got port:" << setting_diaglog.port();
         qDebug() << "got host:" << setting_diaglog.host();
+        qDebug() << "got host:" << setting_diaglog.should_broadcast_name();
 
         set_connection_mode();
         m_presenter->set_port(m_port);
@@ -344,8 +371,6 @@ void MainWindow::on_actionEdit_Certificates_triggered()
 }
 
 
-void MainWindow::on_actionEdit_Certificates_checkableChanged(bool checkable)
-{
 
-}
+
 

@@ -4,12 +4,12 @@
 // #include "my_text_edit.h"
 #include <QMainWindow>
 #include <memory>
+#include "server_settings.h"
 // #include "interface_ssl_presenter.h"
 #include "interface_tcp_view.h"
 #include "abstract_tcp_presenter.h"
 // #include "abstract_ssl_presenter.h"
 #include <QTextEdit>
-#include "server_settings.h"
 #include "formatted_message_model.h"
 #include "bubble_delegate.h"
 #include "line_message_delegate.h"
@@ -49,8 +49,10 @@ private:
     Option<ISecureSocketLayer*> m_ssl{};
 
     bool m_is_connected{false};
+    bool m_should_broadcast_name{false};
     QString m_username{"Your name"};
     QString m_name{"me"};
+    uint32_t m_max_char{128};
     QString m_password{""};
     fs::path m_certs_dir{};
     uint16_t m_port{6970};
@@ -69,6 +71,7 @@ private:
     void set_Btn_to_connect();
     void set_Btn_to_disconnect();
     void set_connection_mode();
+    void check_txt_len();
 public:
     ~MainWindow();
     MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent = nullptr);
@@ -97,6 +100,6 @@ private slots:
     void on_actionEdit_Server_triggered();
     void on_actionEdit_Username_triggered();
     void on_actionEdit_Certificates_triggered();
-    void on_actionEdit_Certificates_checkableChanged(bool checkable);
+    // void on_actionEdit_Certificates_checkableChanged(bool checkable);
 };
 #endif // MAINWINDOW_H

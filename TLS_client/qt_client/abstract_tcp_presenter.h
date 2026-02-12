@@ -12,8 +12,9 @@ protected:
 public:
     virtual ~AbstractTcpPresenter() = default;
     virtual void show() = 0;
-    virtual void attach(ITcpView* tcp_view) = 0;};
-
+    virtual void attach(ITcpView* tcp_view) = 0;
+    virtual void should_broadcast_name(bool val) = 0;
+};
 using AbstractTcpPresenter_ptr = std::unique_ptr<AbstractTcpPresenter>;
 
 
