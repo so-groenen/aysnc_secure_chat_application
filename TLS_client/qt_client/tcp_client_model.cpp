@@ -3,6 +3,9 @@
 
 using enum QAbstractSocket::SocketState;
 
+
+constexpr uint32_t TIMEOUT_MS{1000};
+
 TcpClientModel::TcpClientModel(uint16_t Port, QObject *parent)
     : QObject{parent}, m_port{Port}
 {
@@ -10,7 +13,6 @@ TcpClientModel::TcpClientModel(uint16_t Port, QObject *parent)
     QObject::connect(&m_socket, &QTcpSocket::disconnected, this, &TcpClientModel::is_disconnected);
     QObject::connect(&m_socket, &QTcpSocket::errorOccurred, this, &TcpClientModel::retrieve_error);
 }
-
 
 void TcpClientModel::set_port(uint16_t port)
 {
@@ -85,7 +87,7 @@ void TcpClientModel::look_up_host_infos(const QHostInfo &host)
 void TcpClientModel::connecting_to_host()
 {
     m_socket.connectToHost(m_server_address, m_port);
-    m_is_connected = m_socket.waitForConnected(500);
+    m_is_connected = m_socket.waitForConnected(TIMEOUT_MS);
     if (m_is_connected)
     {
         m_socket.open(QIODevice::ReadWrite);
