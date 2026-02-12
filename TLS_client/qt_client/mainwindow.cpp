@@ -26,28 +26,6 @@ MainWindow::MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent)
     //,m_presenter{std::move(presenter)}
 {
 
-    // auto app_dir = get_application_dir_path();
-    // auto config  = load_json_from_file(app_dir / CONFIG_JSON);
-    // QJsonObject json_config{};
-
-    // if(!config.has_value())
-    // {
-    //     json_config[PASSWORD]       = "louvre";
-    //     json_config[HOSTNAME]       = "192.168.1.33";
-    //     json_config[PORT]           = 4242;
-    //     json_config[MAX_CHARS]      = 128;
-    //     json_config[BROADCAST_NAME] = true;
-    //     json_config[PATH_TO_CERTS]  = QString::fromStdString(fs::current_path().string());
-
-    //     save_json_to_file(app_dir / "chat_app_config.json", json_config);
-    //     qDebug() << "json default config saved";
-    // }
-    // else
-    // {
-    //     json_config = std::move(config.value());
-    //     qDebug() << "json config loaded";
-    // }
-
     if(!fs::exists(m_certs_dir))
     {
         m_certs_dir = fs::current_path();
