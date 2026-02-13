@@ -18,14 +18,13 @@ static constexpr QStringView PORT             = u"port";
 static constexpr QStringView PATH_TO_CERTS    = u"path to certs";
 static constexpr QStringView MAX_CHARS        = u"max chars.";
 static constexpr QStringView BROADCAST_NAME   = u"broadcast name";
-static constexpr std::string_view CONFIG_JSON = "chat_app_config.json";
+static constexpr std::string_view CONFIG_JSON = "chat_app_client_config.json";
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
     m_managed_ui{std::make_unique<Ui::MainWindow>()},
     ui{m_managed_ui.get()}
 {
-
     if(!fs::exists(m_certs_dir))
     {
         m_certs_dir = fs::current_path();
@@ -365,12 +364,10 @@ void MainWindow::on_actionEdit_Server_triggered()
         qDebug() << "got port:" << setting_diaglog.port();
         qDebug() << "got host:" << setting_diaglog.host();
         qDebug() << "got host:" << setting_diaglog.should_broadcast_name();
-
-        set_connection_mode();
-        m_presenter->set_port(m_port);
-
         save_config();
     }
+    set_connection_mode();
+    m_presenter->set_port(m_port);
 }
 
 

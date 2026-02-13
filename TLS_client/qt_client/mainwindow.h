@@ -48,8 +48,8 @@ private:
     uint32_t m_max_char{128};
     QString m_password{""};
     fs::path m_certs_dir{};
-    uint16_t m_port{6970};
-    QString m_hostname{""};
+    uint16_t m_port{4242};
+    QString m_hostname{"0.0.0.0"};
     QColor m_font_color{255, 182, 193};
     bool m_clear_history_on_reconnect{true};
     ConnectionMode m_connection_mode{ConnectionMode::Tcp};

@@ -13,9 +13,9 @@ ServerSettings::ServerSettings(ConnectionMode connect_mode, uint16_t port, QStri
     ui->passwordEdit->setText(password);
     ui->hostnameEdit->setText(host);
 
-    ui->broadcastNameOn->toggle();
-
-    if(!m_should_broadcast_name)
+    if(m_should_broadcast_name)
+        ui->broadcastNameOn->toggle();
+    else
         ui->broadcastNameOff->toggle();
 
     switch (connect_mode)
