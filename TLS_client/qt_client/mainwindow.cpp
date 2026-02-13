@@ -50,8 +50,6 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
 
-
-
     ////////////////////////////////////////
     ui->setupUi(this);
     ui->SendBtn->setEnabled(m_is_connected);
@@ -59,6 +57,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->messageListView->setItemDelegate(m_bubble_delegate.get());
     ui->messageListView->setModel(m_message_model.get());
     ui->messageListView->setWordWrap(true);
+    ui->messageListView->setResizeMode(QListView::Adjust);
+    ui->messageListView->setUniformItemSizes(false);        // this seems to remove bugs related to bubble height
+
 
     ui->messageListView->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
     QObject::connect(ui->MessageEdit, &MyTextEdit::pressEnterEvent, this, &MainWindow::on_SendBtn_clicked);
@@ -320,6 +321,7 @@ void MainWindow::on_connectBtn_clicked()
         m_is_connected = false;
         ui->SendBtn->setEnabled(m_is_connected);
         set_Btn_to_connect();
+        m_message_model->clear_all();
     }
 }
 

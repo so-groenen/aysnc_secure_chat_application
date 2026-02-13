@@ -23,6 +23,8 @@ BubbleDelegate::BubbleDelegate(QObject *parent)
 
 void BubbleDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
+    painter->save();
+
     QVariant msg_data             = index.model()->data(index, Qt::DisplayRole);
     Q_ASSERT(msg_data.canConvert<FormattedMessage>());
 
@@ -63,9 +65,16 @@ void BubbleDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option
     painter->drawText(text_rect, Qt::TextWrapAnywhere, text);
 }
 
-QSize BubbleDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
+
+
+
+static constexpr int DEFAULT_WIDTH{400};
+static constexpr int TEXT_RECT_HEIGHT{10000};
+
+QSize BubbleDelegate::sizeHint(const QStyleOptionViewItem &option,
+                               const QModelIndex &index) const
 {
-    QVariant msg_data             = index.model()->data(index, Qt::DisplayRole);
+    QVariant msg_data = index.model()->data(index, Qt::DisplayRole);
     Q_ASSERT(msg_data.canConvert<FormattedMessage>());
 
     auto formatted_msg = qvariant_cast<FormattedMessage>(msg_data);
@@ -74,15 +83,21 @@ QSize BubbleDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelI
     const QString& content = formatted_msg.content();
     bool is_user           = formatted_msg.is_current_user();
 
+    QString text          = is_user ? content : user + ":\n" + content;
+    QMargins text_padding = is_user ? TEXT_PADDING_RIGHT : TEXT_PADDING_LEFT;
 
-    QString text          = is_user? std::move(content) : user + ":\n" + content;
-    QMargins text_padding = is_user? TEXT_PADDING_RIGHT : TEXT_PADDING_LEFT;
+    const QWidget* widget = option.widget;
+    int available_width   = widget ? widget->width() : DEFAULT_WIDTH;
+    int text_width        = available_width - text_padding.left() - text_padding.right();
 
+    QFontMetricsF metrics{option.font};
 
-    auto metrics     = QFontMetricsF(option.font);
-    auto text_rect   = option.rect.marginsRemoved(text_padding);
-    text_rect        = metrics.boundingRect(text_rect, Qt::TextWrapAnywhere, text).toRect();
-    text_rect        = text_rect.marginsAdded(text_padding);
-    return text_rect.size();
+    QRectF text_rect = metrics.boundingRect(QRectF(0, 0, text_width, TEXT_RECT_HEIGHT), Qt::TextWrapAnywhere, text);
+
+    QSize final_size = text_rect.toRect()
+                          .marginsAdded(text_padding)
+                          .size();
+
+    return final_size;
 }
 

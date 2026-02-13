@@ -10,8 +10,15 @@ LineMessageDelegate::LineMessageDelegate(QObject *parent)
 {
 }
 
+static constexpr int MAX_BUBBLE_WIDTH_RATIO = 65; // percent
+static constexpr int BUBBLE_RADIUS = 12;
+static constexpr int VERTICAL_MARGIN = 6;
+
 void LineMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing, true);
+
     QVariant msg_data = index.model()->data(index, Qt::DisplayRole);
     Q_ASSERT(msg_data.canConvert<FormattedMessage>());
 
@@ -41,13 +48,31 @@ QSize LineMessageDelegate::sizeHint(const QStyleOptionViewItem &option, const QM
     const QString& content = formatted_msg.content();
     bool is_user           = formatted_msg.is_current_user();
 
-    QString text           = is_user? std::move(content) : user + ": " + content;
-    QMargins text_padding  = is_user? TEXT_PADDING_RIGHT : TEXT_PADDING_LEFT;
+    QString text = is_user ? content: user + ": " + content;
 
-    auto metrics     = QFontMetricsF(option.font);
-    auto text_rect   = option.rect.marginsRemoved(text_padding);
-    text_rect        = metrics.boundingRect(text_rect, Qt::TextWrapAnywhere, text).toRect();
-    text_rect        = text_rect.marginsAdded(text_padding);
+    QMargins text_padding = is_user ? TEXT_PADDING_RIGHT : TEXT_PADDING_LEFT;
 
-    return text_rect.size();
+    int available_width = option.widget->width();
+    int text_width      = available_width - text_padding.left() - text_padding.right();
+
+    auto metrics    = QFontMetricsF{option.font};
+    auto bounding   = metrics.boundingRect(QRectF(0, 0, text_width, 0), Qt::TextWordWrap,text);
+
+    QSize size      = bounding.toRect().size();
+    size.rwidth()  += text_padding.left() + text_padding.right();
+    size.rheight() += text_padding.top() + text_padding.bottom();
+
+    return size;
 }
+
+
+
+
+
+
+
+
+
+
+
+
