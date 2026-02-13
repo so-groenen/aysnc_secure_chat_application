@@ -69,3 +69,4 @@ compile_commands.json
 
 *_qmlcache.qrc
 server/.gitignore
+certificates

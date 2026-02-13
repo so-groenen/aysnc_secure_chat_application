@@ -38,7 +38,7 @@ class MainWindow : public QMainWindow, public ITcpView
 private:
     std::unique_ptr<Ui::MainWindow> m_managed_ui{};
     Ui::MainWindow* ui;
-    AbstractTcpPresenter_ptr m_presenter{}; // should be only TcpClient then
+    AbstractTcpPresenter_ptr m_presenter{};
     Option<ISecureSocketLayer*> m_ssl{};
 
     bool m_is_connected{false};
@@ -71,7 +71,7 @@ private:
     void set_connection_mode();
 public:
     ~MainWindow();
-    MainWindow(/*AbstractTcpPresenter_ptr presenter,*/QWidget *parent = nullptr);
+    MainWindow(QWidget *parent = nullptr);
     void dispatch_user_info_dialog();
     void dispatch_server_setting_dialog();
 
@@ -82,7 +82,6 @@ public:
     void handle_disconnect_from_host() override;
 
     // View
-    // void attach(ISslClient* presenter) override;
     const QString& get_password() const override;
     const QString& get_username() const override;
     QColor get_font_color() const override;
