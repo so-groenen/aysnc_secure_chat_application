@@ -11,12 +11,13 @@
 #include "json_loader.h"
 #include <QMessageBox>
 
-static constexpr QStringView HOSTNAME       = u"hostname";
-static constexpr QStringView PASSWORD       = u"password";
-static constexpr QStringView PORT           = u"port";
-static constexpr QStringView PATH_TO_CERTS  = u"path to certs";
-static constexpr QStringView MAX_CHARS      = u"max chars.";
-static constexpr QStringView BROADCAST_NAME = u"broadcast name";
+static constexpr QStringView HOSTNAME         = u"hostname";
+static constexpr QStringView CONNECT_MODE     = u"connection mode";
+static constexpr QStringView PASSWORD         = u"password";
+static constexpr QStringView PORT             = u"port";
+static constexpr QStringView PATH_TO_CERTS    = u"path to certs";
+static constexpr QStringView MAX_CHARS        = u"max chars.";
+static constexpr QStringView BROADCAST_NAME   = u"broadcast name";
 static constexpr std::string_view CONFIG_JSON = "chat_app_config.json";
 
 MainWindow::MainWindow(QWidget *parent)
@@ -36,6 +37,9 @@ MainWindow::MainWindow(QWidget *parent)
         QJsonObject json_config = json_config_res.value();
         m_hostname              = json_config.value(HOSTNAME).toString();
         m_password              = json_config.value(PASSWORD).toString();
+
+        auto connect_mode_res   = try_get_connect_mode_from_view(json_config.value(CONNECT_MODE).toString());
+        m_connection_mode       = connect_mode_res.value_or(ConnectionMode::Tcp);
         m_should_broadcast_name = json_config.value(BROADCAST_NAME).toBool(false);
         m_max_char              = static_cast<uint32_t>(json_config.value(MAX_CHARS).toInt());
         m_port                  = static_cast<uint16_t>(json_config.value(PORT).toInt());
@@ -268,6 +272,7 @@ void MainWindow::save_config()
     auto app_dir = get_application_dir_path();
     QJsonObject json_config{};
 
+    json_config[CONNECT_MODE]   = connect_mode_to_qstring(m_connection_mode);
     json_config[PASSWORD]       = m_password;
     json_config[HOSTNAME]       = m_hostname;
     json_config[PORT]           = m_port;
@@ -277,7 +282,6 @@ void MainWindow::save_config()
 
     save_json_to_file(app_dir / CONFIG_JSON, json_config);
     qDebug() << "json config saved";
-
 }
 
 auto MainWindow::load_json_config() -> Option<QJsonObject>
