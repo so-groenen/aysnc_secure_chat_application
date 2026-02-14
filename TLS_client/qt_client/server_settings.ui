@@ -128,7 +128,7 @@
        <item>
         <widget class="QRadioButton" name="sslRadio">
          <property name="text">
-          <string>SSL </string>
+          <string>TLS/SSL</string>
          </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroup_2</string>
@@ -187,7 +187,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttonGroup_2"/>
   <buttongroup name="buttonGroup"/>
+  <buttongroup name="buttonGroup_2"/>
  </buttongroups>
 </ui>

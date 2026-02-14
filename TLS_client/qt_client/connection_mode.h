@@ -30,7 +30,7 @@ inline auto try_get_connect_mode_from_view(QStringView view) -> std::optional<Co
     {
         return ConnectionMode::Tcp;
     }
-    else if(view.toString().toLower() == "ssl")
+    else if(view.toString().toLower() == "ssl" || view.toString().toLower() == "tls")
     {
         return ConnectionMode::Ssl;
     }

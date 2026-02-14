@@ -1,4 +1,4 @@
-# Async / TLS Chat Application Using Qt6 & Boost::asio 
+# Async TCP / TLS Chat Application Using Qt6 & Boost::asio 
 
 TCP/TLS<sup>1</sup> Chat Messenger Client using Qt6, and async TCP/TLS server using boost.asio.
 
@@ -23,8 +23,8 @@ App features:
 
 Behind the curtains:
 * Uses Model-View-Presenter (MVP) architecture with C++20/23 features.
-* Text messages get formatted to json, containing relevant fields: username, user session id, message and font color. The server's role is to broadcast the messages to all connected users.
-* TCP client with optional TLS layer on top. 
+* Text messages get formatted to json, containing relevant fields: username, user session id, message and font color. The server's role is to broadcast the messages to all connected users
+* TCP client with optional TLS layer on top
 
 
 
@@ -35,6 +35,6 @@ Behind the curtains:
 </p>
 
 * Asyncronous server handling multiple clients concurrently 
-* Uses c++20 coroutines (asio's *awaitable* / *co_await* syntax, reminiscent of Python's *async*/*await* syntax). 
-* Automatically loads all client/server certificates in folder given in config file.
-* Server's network settings (TCP vs SSL, *path/to/certificates* etc) configured using json file (`chat_app_server_config.json`).
+* Uses c++20 coroutines (asio's *awaitable* / *co_await* syntax, reminiscent of Python's *async*/*await* syntax)
+* Automatically loads all client/server certificates in folder given in config file
+* Server's network settings (TCP vs SSL, *path/to/certificates* etc) configured using json file (`chat_app_server_config.json`)
