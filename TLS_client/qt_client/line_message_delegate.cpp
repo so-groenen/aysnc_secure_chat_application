@@ -16,7 +16,7 @@ static constexpr int VERTICAL_MARGIN{6};
 
 void LineMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    painter->save();
+    // painter->save();
     painter->setRenderHint(QPainter::Antialiasing, true);
 
     QVariant msg_data = index.model()->data(index, Qt::DisplayRole);

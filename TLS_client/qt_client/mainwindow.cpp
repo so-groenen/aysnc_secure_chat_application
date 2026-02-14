@@ -59,6 +59,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->messageListView->setWordWrap(true);
     ui->messageListView->setResizeMode(QListView::Adjust);
     ui->messageListView->setUniformItemSizes(false);        // this seems to remove bugs related to bubble height
+    ui->messageListView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
 
     ui->messageListView->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);

@@ -34,7 +34,7 @@ Behind the curtains:
 <img src="demo/tls_example.jpg" alt="kick" width="400">
 </p>
 
-* Asyncronous server handling multiple clients concurrently 
-* Uses c++20 coroutines (asio's *awaitable* / *co_await* syntax, reminiscent of Python's *async*/*await* syntax)
+* Asynchronous server handling multiple clients concurrently 
+* Uses c++20 coroutines (using asio's *awaitable* / *co_await* syntax, reminiscent of Python's *async*/*await* syntax)
 * Automatically loads all client/server certificates in folder given in config file
 * Server's network settings (TCP vs SSL, *path/to/certificates* etc) configured using json file (`chat_app_server_config.json`)
