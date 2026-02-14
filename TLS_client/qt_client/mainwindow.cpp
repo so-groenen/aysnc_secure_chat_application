@@ -105,7 +105,8 @@ void MainWindow::handle_connect_response(const ConnectionResult &connect_result)
         if(m_clear_history_on_reconnect)
             m_message_model->clear_all();
 
-        QString result{"<CONNECTED>"};
+        // QString result{"<CONNECTED>"};
+        QString result{"<Connected>"};
         m_message_model->add_warning(result);
 
         ui->ResultEdit->setText(connect_result.value()); // ip addresse
@@ -155,7 +156,8 @@ void MainWindow::handle_msg_reception(const MessageVariant &msg)
 void MainWindow::handle_disconnect_from_host()
 {
     ui->ResultEdit->setText("Connection lost");
-    QString result{"<DISCONNECTED>"};
+    // QString result{"<DISCONNECTED FROM HOST>"};
+    QString result{"<Disconnected from host>"};
     m_message_model->add_warning(result);
 
     set_Btn_to_connect();
@@ -321,7 +323,10 @@ void MainWindow::on_connectBtn_clicked()
         m_is_connected = false;
         ui->SendBtn->setEnabled(m_is_connected);
         set_Btn_to_connect();
-        m_message_model->clear_all();
+
+        // QString result{"<DISCONNECTED>"};
+        QString result{"<Disconnected>"};
+        m_message_model->add_warning(result);
     }
 }
 

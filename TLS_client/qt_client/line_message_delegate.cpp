@@ -10,9 +10,9 @@ LineMessageDelegate::LineMessageDelegate(QObject *parent)
 {
 }
 
-static constexpr int MAX_BUBBLE_WIDTH_RATIO = 65; // percent
-static constexpr int BUBBLE_RADIUS = 12;
-static constexpr int VERTICAL_MARGIN = 6;
+static constexpr int MAX_BUBBLE_WIDTH_RATIO{65}; // percent
+static constexpr int BUBBLE_RADIUS{12};
+static constexpr int VERTICAL_MARGIN{6};
 
 void LineMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
